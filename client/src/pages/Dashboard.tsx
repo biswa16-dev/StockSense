@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Sidebar from "../components/Sidebar";
-import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock } from "lucide-react";
+import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock, Trash2 } from "lucide-react";
 import SettingsTab from "../components/SettingsTab";
 import AddProductModal from "../components/AddProductModal";
 import { useSettings } from '../hooks/useSettings';
@@ -128,6 +128,10 @@ export default function Dashboard() {
     tx.user.toLowerCase().includes(opsSearch.toLowerCase())
   );
 
+  const handleDeleteProduct = (id: number) => {
+    setProducts(products.filter(p => p.id !== id));
+  };
+
   return (
     <div className="w-full h-screen flex bg-[#f0f0f0] overflow-hidden">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userName={userName} />
@@ -214,6 +218,7 @@ export default function Dashboard() {
                         <th className="py-3 px-4 text-xs font-medium text-[rgba(30,50,90,0.6)] uppercase tracking-wider">Category</th>
                         <th className="py-3 px-4 text-xs font-medium text-[rgba(30,50,90,0.6)] uppercase tracking-wider">In Stock</th>
                         <th className="py-3 px-4 text-xs font-medium text-[rgba(30,50,90,0.6)] uppercase tracking-wider">Status</th>
+                        <th className="py-3 px-4 text-xs font-medium text-[rgba(30,50,90,0.6)] uppercase tracking-wider text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/20">
@@ -227,6 +232,15 @@ export default function Dashboard() {
                             <span className={`px-2 py-1 rounded-md text-xs ${p.stock > 10 ? 'bg-green-500/10 text-green-600' : p.stock > 0 ? 'bg-amber-500/10 text-amber-600' : 'bg-red-500/10 text-red-600'}`}>
                               {p.stock > 10 ? 'In Stock' : p.stock > 0 ? 'Low Stock' : 'Out of Stock'}
                             </span>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.id); }}
+                              className="p-1.5 rounded-full hover:bg-red-500/10 text-[rgba(30,50,90,0.4)] hover:text-red-500 transition-colors"
+                              title="Delete Product"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -282,10 +296,17 @@ export default function Dashboard() {
                         className="w-full h-full object-cover rounded-xl group-hover:scale-105 transition-transform duration-500"
                       />
                       {product.stock === 0 && (
-                        <div className="absolute top-6 right-6 bg-red-500/90 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full backdrop-blur-sm">
+                        <div className="absolute top-4 right-4 bg-red-500/90 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full backdrop-blur-sm shadow-sm z-10">
                           Out of Stock
                         </div>
                       )}
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDeleteProduct(product.id); }}
+                        className="absolute top-4 left-4 p-2 bg-white/70 hover:bg-red-500 text-[rgba(30,50,90,0.5)] hover:text-white backdrop-blur-md rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm z-10"
+                        title="Delete Product"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                     <div className="p-4 flex flex-col flex-1 justify-between">
                       <div>
