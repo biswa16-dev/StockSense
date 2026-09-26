@@ -60,7 +60,6 @@ const transactions = [
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
-<<<<<<< Updated upstream
   const [userName, setUserName] = useState("Demo User");
 
   useEffect(() => {
@@ -73,7 +72,7 @@ export default function Dashboard() {
       }
     }
   }, []);
-=======
+
   const { settings, loading, saving, hasUnsavedChanges, exchangeRates, updateSection, save, reset } = useSettings();
 
   const formatCurrency = (value: number) => {
@@ -93,7 +92,6 @@ export default function Dashboard() {
       return `${targetCurrency} ${convertedValue.toFixed(2)}`;
     }
   };
->>>>>>> Stashed changes
 
   return (
     <div className="w-full h-screen flex bg-[#f0f0f0] overflow-hidden">
