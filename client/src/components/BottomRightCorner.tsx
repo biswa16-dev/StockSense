@@ -20,14 +20,14 @@ export default function BottomRightCorner() {
         </svg>
       </div>
       
-      <div className="bg-[rgba(30,50,90,0.05)] w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center border border-[rgba(30,50,90,0.1)]">
-        <ArrowUpRight className="w-5 h-5 text-[rgba(30,50,90,0.8)]" />
+      <div className="bg-[#47536b]/5 w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center border border-[#47536b]/10">
+        <ArrowUpRight className="w-5 h-5 text-[#47536b]" />
       </div>
       
       <div className="flex flex-col">
-        <span className="text-[16px] md:text-[20px] font-normal text-[rgba(30,50,90,0.95)]">Documentation</span>
-        <div className="flex items-center gap-1 text-[rgba(30,50,90,0.6)] cursor-pointer hover:text-[rgba(30,50,90,0.8)] transition-colors">
-          <span className="text-[12px] md:text-[15px] font-normal">Library</span>
+        <span className="text-[16px] md:text-[20px] font-normal text-[#384358]">Resources</span>
+        <div className="flex items-center gap-1 text-[#5E6470] cursor-pointer hover:text-[#384358] transition-colors">
+          <span className="text-[12px] md:text-[15px] font-normal">Guides & Support</span>
           <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
         </div>
       </div>

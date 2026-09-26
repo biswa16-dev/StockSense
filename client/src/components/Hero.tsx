@@ -26,7 +26,7 @@ export default function Hero() {
               animate={{ opacity: 1, scale: 1 }} 
               transition={{ duration: 0.8, delay: 0.2 }}
             >
-              Modular Inventory Management
+              Manage Stock <br className="hidden md:block" /> Smarter
             </motion.h1>
             <motion.p 
               className="text-sm sm:text-base md:text-lg text-[#5E6470] opacity-80 leading-relaxed max-w-xl font-normal"
@@ -34,7 +34,7 @@ export default function Hero() {
               animate={{ opacity: 1 }} 
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              Replace manual registers and Excel sheets with a centralized, real-time app to streamline all your stock-related operations instantly.
+              Manage your products, track stock levels, and stay in <br className="hidden md:block" /> control of your inventory with ease.
             </motion.p>
           </div>
           <BottomLeftCard />
