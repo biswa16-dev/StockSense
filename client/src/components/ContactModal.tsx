@@ -80,7 +80,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
               </div>
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <input type="hidden" name="access_key" value={import.meta.env.VITE_WEB3FORMS_ACCESS_KEY} />
+                <input type="hidden" name="access_key" value={import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || ""} />
                 
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="flex flex-col gap-1.5 flex-1">
