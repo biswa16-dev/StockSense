@@ -1,13 +1,17 @@
 import { motion } from "motion/react";
 import { LayoutDashboard, Package, ArrowRightLeft, Settings, LogOut, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  userName?: string;
 }
 
-export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, userName = "Alex Mercer" }: SidebarProps) {
+  const navigate = useNavigate();
+
   const menuItems = [
     { name: "Dashboard", id: "dashboard", icon: LayoutDashboard },
     { name: "Products", id: "products", icon: Package },
@@ -23,12 +27,12 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       className="w-64 h-full flex flex-col justify-between bg-white/40 backdrop-blur-2xl border-r border-white/20 p-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
     >
       <div>
-        <div className="flex items-center gap-2 mb-12">
+        <Link to="/" className="flex items-center gap-2 mb-12 cursor-pointer hover:opacity-80 transition-opacity">
           <div className="bg-[rgba(30,50,90,0.8)] p-2 rounded-xl">
             <Package className="w-5 h-5 text-white" />
           </div>
           <span className="font-regular tracking-tighter text-xl text-[rgba(30,50,90,0.9)]">StockSense</span>
-        </div>
+        </Link>
         <nav className="flex flex-col gap-2">
           {menuItems.map((item) => {
             const isActive = activeTab === item.id;
@@ -53,12 +57,14 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
 
       <div className="flex flex-col gap-2">
         <button 
+          onClick={() => setActiveTab('settings')}
           className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 text-[rgba(30,50,90,0.6)] hover:bg-white/40 hover:text-[rgba(30,50,90,0.9)] text-left"
         >
           <User className="w-5 h-5 text-[rgba(30,50,90,0.5)]" />
-          <span className="font-normal text-sm">My Profile</span>
+          <span className="font-normal text-sm">{userName}</span>
         </button>
         <button 
+          onClick={() => navigate('/')}
           className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 text-[rgba(30,50,90,0.6)] hover:bg-[rgba(220,53,69,0.1)] hover:text-[#dc3545] text-left"
         >
           <LogOut className="w-5 h-5" />

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Sidebar from "../components/Sidebar";
-import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, User, Bell, Shield, Moon, Save, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock } from "lucide-react";
+import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, User, Bell, Moon, Save, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock } from "lucide-react";
 
 // Existing mock data
 const kpis = [
@@ -32,10 +32,22 @@ const transactions = [
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [userName, setUserName] = useState("Demo User");
+
+  useEffect(() => {
+    const user = localStorage.getItem("stockSenseUser");
+    if (user) {
+      try {
+        setUserName(JSON.parse(user).name);
+      } catch (e) {
+        console.error("Failed to parse user");
+      }
+    }
+  }, []);
 
   return (
     <div className="w-full h-screen flex bg-[#f0f0f0] overflow-hidden">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userName={userName} />
       <main className="flex-1 h-full p-6 md:p-10 overflow-y-auto">
         <AnimatePresence mode="wait">
           
@@ -235,7 +247,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-sm font-medium text-[rgba(30,50,90,0.7)]">Full Name</label>
-                      <input type="text" defaultValue="John Doe" className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] shadow-sm" />
+                      <input type="text" defaultValue={userName} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] shadow-sm" />
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-sm font-medium text-[rgba(30,50,90,0.7)]">Email Address</label>

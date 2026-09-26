@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Hero from "./components/Hero";
 import Dashboard from "./pages/Dashboard";
+import SignUp from "./pages/SignUp";
 
 function Home() {
   return (
@@ -13,14 +14,19 @@ function Home() {
   );
 }
 
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-    </BrowserRouter>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/signup" element={<SignUp />} />
+        </Routes>
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   );
 }
 

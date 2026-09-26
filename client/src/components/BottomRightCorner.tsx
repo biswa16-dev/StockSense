@@ -20,17 +20,19 @@ export default function BottomRightCorner() {
         </svg>
       </div>
       
-      <div className="bg-[#47536b]/5 w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center border border-[#47536b]/10">
-        <ArrowUpRight className="w-5 h-5 text-[#47536b]" />
-      </div>
-      
-      <div className="flex flex-col">
-        <span className="text-[16px] md:text-[20px] font-normal text-[#384358]">Resources</span>
-        <div className="flex items-center gap-1 text-[#5E6470] cursor-pointer hover:text-[#384358] transition-colors">
-          <span className="text-[12px] md:text-[15px] font-normal">Guides & Support</span>
-          <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+      <a href="#dashboard-section" className="flex items-center gap-3 sm:gap-4 md:gap-6 cursor-pointer group">
+        <div className="bg-[#47536b]/5 w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center border border-[#47536b]/10 group-hover:bg-[#47536b]/10 transition-colors">
+          <ArrowUpRight className="w-5 h-5 text-[#47536b]" />
         </div>
-      </div>
+        
+        <div className="flex flex-col">
+          <span className="text-[16px] md:text-[20px] font-normal text-[#384358]">Dashboard</span>
+          <div className="flex items-center gap-1 text-[#5E6470] group-hover:text-[#384358] transition-colors">
+            <span className="text-[12px] md:text-[15px] font-normal">Go to Dashboard</span>
+            <ChevronRight className="w-3 h-3 md:w-4 md:h-4 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </div>
+      </a>
     </motion.div>
   );
 }
