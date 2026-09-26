@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Plus, PackageSearch, Tag, IndianRupee, Layers } from 'lucide-react';
+import { X, Plus, PackageSearch, Tag, IndianRupee, Layers, Image as ImageIcon } from 'lucide-react';
 
 export default function AddProductModal({ isOpen, onClose, onAdd }: any) {
   const [formData, setFormData] = useState({
@@ -8,7 +8,8 @@ export default function AddProductModal({ isOpen, onClose, onAdd }: any) {
     sku: '',
     price: '',
     stock: '',
-    category: ''
+    category: '',
+    image: ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -21,10 +22,10 @@ export default function AddProductModal({ isOpen, onClose, onAdd }: any) {
       price: parseFloat(formData.price),
       stock: parseInt(formData.stock),
       category: formData.category,
-      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=800" // Generic placeholder for demo
+      image: formData.image || "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=800"
     });
 
-    setFormData({ name: '', sku: '', price: '', stock: '', category: '' });
+    setFormData({ name: '', sku: '', price: '', stock: '', category: '', image: '' });
   };
 
   return (
@@ -134,6 +135,19 @@ export default function AddProductModal({ isOpen, onClose, onAdd }: any) {
                   <option value="Lighting">Lighting</option>
                   <option value="Decor">Decor</option>
                 </select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-medium text-[rgba(30,50,90,0.7)] flex items-center gap-1">
+                  <ImageIcon className="w-3 h-3" /> Image URL (Optional)
+                </label>
+                <input 
+                  type="url" 
+                  value={formData.image}
+                  onChange={e => setFormData({...formData, image: e.target.value})}
+                  className="px-4 py-2.5 rounded-xl bg-white/50 border border-white/40 focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] shadow-sm text-sm"
+                  placeholder="https://example.com/image.jpg"
+                />
               </div>
 
               <div className="mt-4 flex justify-end gap-3">
