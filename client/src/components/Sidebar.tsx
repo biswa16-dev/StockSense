@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { LayoutDashboard, Package, ArrowRightLeft, Settings, LogOut, User } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -8,8 +8,6 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab, userName = "Alex Mercer" }: SidebarProps) {
-  const navigate = useNavigate();
-
   const menuItems = [
     { name: "Dashboard", id: "dashboard", icon: LayoutDashboard },
     { name: "Products", id: "products", icon: Package },

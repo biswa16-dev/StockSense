@@ -109,7 +109,8 @@ export const fetchExchangeRates = async (): Promise<Record<string, number>> => {
   }
   
   try {
-    const response = await fetch('http://localhost:3000/api/exchange-rates');
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const response = await fetch(`${API_URL}/api/exchange-rates`);
     const data = await response.json();
     if (data.status === 'success' && data.rates) {
       cachedExchangeRates = data.rates;
