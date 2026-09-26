@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar";
 import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock, Trash2 } from "lucide-react";
 import SettingsTab from "../components/SettingsTab";
 import AddProductModal from "../components/AddProductModal";
+import TransactionModal from "../components/TransactionModal";
 import { useSettings } from '../hooks/useSettings';
 
 // Existing mock data
@@ -51,7 +52,7 @@ const getLocaleForCountry = (country: string, format: string) => {
 
 // Removed static exchangeRates
 
-const transactions = [
+const initialTransactions = [
   { id: "TX-1042", type: "INBOUND", date: "Today, 10:45 AM", sku: "FURN-SOF-01", qty: "+5", user: "Admin", status: "Completed" },
   { id: "TX-1041", type: "OUTBOUND", date: "Today, 09:15 AM", sku: "LIGH-FLR-07", qty: "-2", user: "John Doe", status: "Completed" },
   { id: "TX-1040", type: "ADJUSTMENT", date: "Yesterday, 16:30 PM", sku: "FURN-COF-03", qty: "-1", user: "System", status: "Completed" },
@@ -68,7 +69,9 @@ export default function Dashboard() {
   const [productsSearch, setProductsSearch] = useState("");
   const [opsSearch, setOpsSearch] = useState("");
   const [products, setProducts] = useState(initialProducts);
+  const [transactions, setTransactions] = useState(initialTransactions);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [txModalType, setTxModalType] = useState<string | null>(null);
 
   useEffect(() => {
     const user = localStorage.getItem("stockSenseUser");
@@ -130,6 +133,22 @@ export default function Dashboard() {
 
   const handleDeleteProduct = (id: number) => {
     setProducts(products.filter(p => p.id !== id));
+  };
+
+  const handleAddTransaction = (newTx: any) => {
+    const txId = `TX-${1000 + transactions.length + 50}`;
+    const { qtyNum, ...txDataToSave } = newTx;
+    
+    setTransactions([{ ...txDataToSave, id: txId }, ...transactions]);
+
+    setProducts(products.map(p => {
+      if (p.sku === newTx.sku) {
+        return { ...p, stock: Math.max(0, p.stock + newTx.qtyNum) };
+      }
+      return p;
+    }));
+    
+    setTxModalType(null);
   };
 
   return (
@@ -366,7 +385,7 @@ export default function Dashboard() {
 
               {/* Quick Actions */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group flex items-start gap-4">
+                <div onClick={() => setTxModalType('INBOUND')} className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group flex items-start gap-4">
                   <div className="bg-green-500/10 p-3 rounded-2xl group-hover:bg-green-500/20 transition-colors">
                     <ArrowDown className="w-6 h-6 text-green-600" />
                   </div>
@@ -376,7 +395,7 @@ export default function Dashboard() {
                   </div>
                 </div>
                 
-                <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group flex items-start gap-4">
+                <div onClick={() => setTxModalType('OUTBOUND')} className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group flex items-start gap-4">
                   <div className="bg-blue-500/10 p-3 rounded-2xl group-hover:bg-blue-500/20 transition-colors">
                     <ArrowUp className="w-6 h-6 text-blue-600" />
                   </div>
@@ -386,7 +405,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group flex items-start gap-4">
+                <div onClick={() => setTxModalType('ADJUSTMENT')} className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-all cursor-pointer group flex items-start gap-4">
                   <div className="bg-amber-500/10 p-3 rounded-2xl group-hover:bg-amber-500/20 transition-colors">
                     <RefreshCw className="w-6 h-6 text-amber-600" />
                   </div>
@@ -483,6 +502,14 @@ export default function Dashboard() {
           setProducts([ { ...newProduct, id: products.length + 1 }, ...products ]); 
           setIsAddProductModalOpen(false); 
         }} 
+      />
+      <TransactionModal
+        isOpen={!!txModalType}
+        onClose={() => setTxModalType(null)}
+        onAdd={handleAddTransaction}
+        type={txModalType}
+        products={products}
+        userName={userName}
       />
     </div>
   );
