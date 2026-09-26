@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import Sidebar from "../components/Sidebar";
 import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock } from "lucide-react";
 import SettingsTab from "../components/SettingsTab";
+import AddProductModal from "../components/AddProductModal";
 import { useSettings } from '../hooks/useSettings';
 
 // Existing mock data
@@ -14,7 +15,7 @@ const kpis = [
   { title: "Internal Transfers", value: "3", icon: ArrowRightLeft, color: "text-purple-500", bg: "bg-purple-500/10" },
 ];
 
-const products = [
+const initialProducts = [
   { id: 1, name: "Premium Leather Sofa", sku: "FURN-SOF-01", price: 107817.00, stock: 12, category: "Living Room", image: "/sofa_1790404151421.jpg" },
   { id: 2, name: "Oak Dining Table", sku: "FURN-TBL-02", price: 70467.00, stock: 4, category: "Dining Room", image: "/dining_table_1790404166312.jpg" },
   { id: 3, name: "Glass Coffee Table", sku: "FURN-COF-03", price: 28967.00, stock: 0, category: "Living Room", image: "/coffee_table_1790404210385.jpg" },
@@ -66,6 +67,8 @@ export default function Dashboard() {
   const [dashboardFilter, setDashboardFilter] = useState("All Types");
   const [productsSearch, setProductsSearch] = useState("");
   const [opsSearch, setOpsSearch] = useState("");
+  const [products, setProducts] = useState(initialProducts);
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
 
   useEffect(() => {
     const user = localStorage.getItem("stockSenseUser");
@@ -256,7 +259,7 @@ export default function Dashboard() {
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(30,50,90,0.4)]" />
                     <input type="text" value={productsSearch} onChange={(e) => setProductsSearch(e.target.value)} placeholder="Search products..." className="pl-9 pr-4 py-2 rounded-full bg-white/50 backdrop-blur-md border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)] w-64" />
                   </div>
-                  <button className="flex items-center gap-2 bg-[rgba(30,50,90,0.8)] hover:bg-[rgba(30,50,90,1)] text-white px-4 py-2 rounded-full transition-colors text-sm">
+                  <button onClick={() => setIsAddProductModalOpen(true)} className="flex items-center gap-2 bg-[rgba(30,50,90,0.8)] hover:bg-[rgba(30,50,90,1)] text-white px-4 py-2 rounded-full transition-colors text-sm">
                     <Plus className="w-4 h-4" /> Add Product
                   </button>
                 </div>
@@ -452,6 +455,14 @@ export default function Dashboard() {
           
         </AnimatePresence>
       </main>
+      <AddProductModal 
+        isOpen={isAddProductModalOpen} 
+        onClose={() => setIsAddProductModalOpen(false)} 
+        onAdd={(newProduct: any) => { 
+          setProducts([ { ...newProduct, id: products.length + 1 }, ...products ]); 
+          setIsAddProductModalOpen(false); 
+        }} 
+      />
     </div>
   );
 }
