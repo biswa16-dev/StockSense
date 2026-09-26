@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
-import { ChevronRight, ArrowUpRight, User } from "lucide-react";
+import { ArrowUpRight, User } from "lucide-react";
 
 export default function Navbar() {
   const [userName, setUserName] = useState("");
@@ -18,18 +18,7 @@ export default function Navbar() {
   return (
     <nav className="flex items-center justify-between py-6 px-6 md:px-10 w-full relative z-10">
       <div className="flex-1 hidden md:block" />
-      <ul className="hidden md:flex items-center gap-8 text-[#5E6470] font-normal text-sm">
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">Features</li>
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">
-          Solutions
-          <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-        </li>
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">Docs</li>
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">
-          Company
-          <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-        </li>
-      </ul>
+
       <div className="md:hidden">
         <span className="font-regular tracking-tighter text-xl text-[#47536b]">StockSense IMS</span>
       </div>
