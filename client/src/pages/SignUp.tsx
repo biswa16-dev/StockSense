@@ -47,11 +47,9 @@ export default function SignUp() {
         };
         localStorage.setItem("stockSenseUsersDB", JSON.stringify(usersDB));
         
-        // Switch to login view after successful registration
-        setSuccessMsg("Account created successfully! Please log in.");
-        setIsLogin(true);
-        // Clear password for security, keep email for convenience
-        setPassword("");
+        // Auto-login after successful registration
+        localStorage.setItem("stockSenseUser", JSON.stringify({ name: finalName }));
+        navigate("/dashboard");
       } else {
         // Login Flow
         const user = usersDB[email];
