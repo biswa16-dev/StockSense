@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Circle, Globe, Code, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Circle, Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useGoogleLogin } from '@react-oauth/google';
 
 export default function SignUp() {
@@ -272,14 +272,7 @@ function StepItem({ number, text, active }: { number: number, text: string, acti
   );
 }
 
-function SocialButton({ icon, label }: { icon: React.ReactNode, label: string }) {
-  return (
-    <button type="button" className="flex items-center justify-center gap-2 h-11 w-full bg-white/60 backdrop-blur-md border border-white/50 rounded-xl hover:bg-white/80 hover:shadow-sm transition-all text-sm font-medium text-[#1E325A] cursor-pointer shadow-sm">
-      {icon}
-      <span>{label}</span>
-    </button>
-  );
-}
+// Removed unused SocialButton component
 
 function InputGroup({ label, placeholder, type, value, onChange }: { label: string, placeholder: string, type: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
   return (
