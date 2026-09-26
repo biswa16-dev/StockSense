@@ -1,1 +1,1 @@
-# -StockSense
+# StockSense
