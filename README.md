@@ -4,7 +4,7 @@
 
 Welcome to the repository for **StockSense**. This project is a modern, intuitive, and highly interactive Inventory Management System designed to streamline stock tracking, operations, and business analytics with a rich user experience.
 
-🔗 **Live Demo:** [https://stocksense.web.app](https://stocksense.web.app) *(Replace with your actual link if deployed)*
+🔗 **Live Demo:** [https://stocksense.web.app](https://stocksenseims.web.app/) 
 
 ---
 
