@@ -347,6 +347,42 @@ export default function Dashboard() {
             </motion.div>
           )}
 
+          {/* WAREHOUSE TAB */}
+          {activeTab === "warehouse" && (
+            <motion.div 
+              key="warehouse"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
+              className="max-w-7xl mx-auto flex flex-col gap-8 pb-10"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-normal text-[rgba(30,50,90,0.9)] tracking-tight mb-1">Warehouse</h1>
+                  <p className="text-sm text-[rgba(30,50,90,0.6)] font-normal">This page contains the warehouse details & location.</p>
+                </div>
+              </div>
+
+              {/* Form Content */}
+              <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[2rem] p-8 max-w-2xl flex flex-col gap-6 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Name:</label>
+                  <input type="text" className="flex-1 px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)]" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Short Code:</label>
+                  <input type="text" className="flex-1 px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)]" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Address:</label>
+                  <input type="text" className="flex-1 px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)]" />
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* SETTINGS TAB */}
           {activeTab === "settings" && (
             <SettingsTab
@@ -480,7 +516,7 @@ export default function Dashboard() {
           )}
 
           {/* OTHER TABS PLACEHOLDERS */}
-          {activeTab !== "dashboard" && activeTab !== "products" && activeTab !== "settings" && activeTab !== "operations" && (
+          {activeTab !== "dashboard" && activeTab !== "products" && activeTab !== "warehouse" && activeTab !== "settings" && activeTab !== "operations" && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
