@@ -1,8 +1,6 @@
 import { motion } from "motion/react";
 import { LayoutDashboard, Package, ArrowRightLeft, Settings, LogOut, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-
-
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;

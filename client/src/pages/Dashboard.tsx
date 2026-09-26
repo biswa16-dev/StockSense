@@ -1,11 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Sidebar from "../components/Sidebar";
+<<<<<<< Updated upstream
 import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, User, Bell, Moon, Save, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock } from "lucide-react";
+=======
+import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock } from "lucide-react";
+import SettingsTab from "../components/SettingsTab";
+import { useSettings } from '../hooks/useSettings';
+>>>>>>> Stashed changes
 
 // Existing mock data
 const kpis = [
-  { title: "Total Products", value: "2,405", icon: PackageSearch, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { title: "Total Inventory Value", value: 525000, isCurrency: true, icon: PackageSearch, color: "text-blue-500", bg: "bg-blue-500/10" },
   { title: "Low / Out of Stock", value: "34", icon: AlertTriangle, color: "text-red-500", bg: "bg-red-500/10" },
   { title: "Pending Receipts", value: "12", icon: ArrowDownToLine, color: "text-green-500", bg: "bg-green-500/10" },
   { title: "Pending Deliveries", value: "8", icon: Truck, color: "text-amber-500", bg: "bg-amber-500/10" },
@@ -13,14 +19,40 @@ const kpis = [
 ];
 
 const products = [
-  { id: 1, name: "Premium Leather Sofa", sku: "FURN-SOF-01", price: "$1,299.00", stock: 12, category: "Living Room", image: "/sofa_1790404151421.jpg" },
-  { id: 2, name: "Oak Dining Table", sku: "FURN-TBL-02", price: "$849.00", stock: 4, category: "Dining Room", image: "/dining_table_1790404166312.jpg" },
-  { id: 3, name: "Glass Coffee Table", sku: "FURN-COF-03", price: "$349.00", stock: 0, category: "Living Room", image: "/coffee_table_1790404210385.jpg" },
-  { id: 4, name: "Ergonomic Office Chair", sku: "FURN-CHR-04", price: "$299.00", stock: 45, category: "Office", image: "/office_chair_1790404225722.jpg" },
-  { id: 5, name: "King Size Bed Frame", sku: "FURN-BED-05", price: "$999.00", stock: 8, category: "Bedroom", image: "/bed_frame_1790404238429.jpg" },
-  { id: 6, name: "Modern Upholstered Dining Chair", sku: "FURN-DNC-06", price: "$149.00", stock: 24, category: "Dining Room", image: "/dining_chair_1790404644025.jpg" },
-  { id: 7, name: "Tripod Shelf Floor Lamp", sku: "LIGH-FLR-07", price: "$129.00", stock: 15, category: "Lighting", image: "/custom_floor_lamp_1790405571407.jpg" }
+  { id: 1, name: "Premium Leather Sofa", sku: "FURN-SOF-01", price: 107817.00, stock: 12, category: "Living Room", image: "/sofa_1790404151421.jpg" },
+  { id: 2, name: "Oak Dining Table", sku: "FURN-TBL-02", price: 70467.00, stock: 4, category: "Dining Room", image: "/dining_table_1790404166312.jpg" },
+  { id: 3, name: "Glass Coffee Table", sku: "FURN-COF-03", price: 28967.00, stock: 0, category: "Living Room", image: "/coffee_table_1790404210385.jpg" },
+  { id: 4, name: "Ergonomic Office Chair", sku: "FURN-CHR-04", price: 24817.00, stock: 45, category: "Office", image: "/office_chair_1790404225722.jpg" },
+  { id: 5, name: "King Size Bed Frame", sku: "FURN-BED-05", price: 82917.00, stock: 8, category: "Bedroom", image: "/bed_frame_1790404238429.jpg" },
+  { id: 6, name: "Modern Upholstered Dining Chair", sku: "FURN-DNC-06", price: 12367.00, stock: 24, category: "Dining Room", image: "/dining_chair_1790404644025.jpg" },
+  { id: 7, name: "Tripod Shelf Floor Lamp", sku: "LIGH-FLR-07", price: 10707.00, stock: 15, category: "Lighting", image: "/custom_floor_lamp_1790405571407.jpg" }
 ];
+
+const getLocaleForCountry = (country: string, format: string) => {
+  if (format === 'Indian') return 'en-IN';
+  
+  const locales: Record<string, string> = {
+    'India': 'en-IN',
+    'United States': 'en-US',
+    'United Kingdom': 'en-GB',
+    'Canada': 'en-CA',
+    'Australia': 'en-AU',
+    'UAE': 'ar-AE',
+    'Singapore': 'en-SG',
+    'Germany': 'de-DE',
+    'France': 'fr-FR',
+    'Japan': 'ja-JP',
+    'Brazil': 'pt-BR',
+    'South Africa': 'en-ZA',
+    'Mexico': 'es-MX',
+    'Italy': 'it-IT',
+    'Spain': 'es-ES',
+    'Netherlands': 'nl-NL'
+  };
+  return locales[country] || 'en-US';
+};
+
+// Removed static exchangeRates
 
 const transactions = [
   { id: "TX-1042", type: "INBOUND", date: "Today, 10:45 AM", sku: "FURN-SOF-01", qty: "+5", user: "Admin", status: "Completed" },
@@ -32,6 +64,7 @@ const transactions = [
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
+<<<<<<< Updated upstream
   const [userName, setUserName] = useState("Demo User");
 
   useEffect(() => {
@@ -44,6 +77,27 @@ export default function Dashboard() {
       }
     }
   }, []);
+=======
+  const { settings, loading, saving, hasUnsavedChanges, exchangeRates, updateSection, save, reset } = useSettings();
+
+  const formatCurrency = (value: number) => {
+    if (!settings) return `₹${value.toFixed(2)}`;
+    
+    const targetCurrency = settings.regional.currency;
+    const rate = (exchangeRates && exchangeRates[targetCurrency]) ? exchangeRates[targetCurrency] : 1;
+    const convertedValue = value * rate;
+
+    const locale = getLocaleForCountry(settings.regional.country, settings.regional.numberFormat);
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: 'currency',
+        currency: targetCurrency,
+      }).format(convertedValue);
+    } catch (e) {
+      return `${targetCurrency} ${convertedValue.toFixed(2)}`;
+    }
+  };
+>>>>>>> Stashed changes
 
   return (
     <div className="w-full h-screen flex bg-[#f0f0f0] overflow-hidden">
@@ -86,7 +140,9 @@ export default function Dashboard() {
                         <Icon className={`w-5 h-5 ${kpi.color}`} />
                       </div>
                       <div>
-                        <h3 className="text-[28px] font-normal text-[rgba(30,50,90,0.95)] leading-none mb-1">{kpi.value}</h3>
+                        <h3 className="text-[28px] font-normal text-[rgba(30,50,90,0.95)] leading-none mb-1">
+                          {kpi.isCurrency ? formatCurrency(kpi.value as number) : kpi.value}
+                        </h3>
                         <p className="text-[12px] font-normal text-[rgba(30,50,90,0.6)] uppercase tracking-wider">{kpi.title}</p>
                       </div>
                     </div>
@@ -204,7 +260,7 @@ export default function Dashboard() {
                         <div className="text-xs text-[rgba(30,50,90,0.5)] mb-3">{product.sku}</div>
                       </div>
                       <div className="flex items-end justify-between mt-auto pt-4 border-t border-[rgba(30,50,90,0.1)]">
-                        <span className="text-lg font-medium text-[rgba(30,50,90,0.95)]">{product.price}</span>
+                        <span className="text-lg font-medium text-[rgba(30,50,90,0.95)]">{formatCurrency(product.price)}</span>
                         <span className={`text-xs font-medium ${product.stock > 10 ? 'text-green-600' : product.stock > 0 ? 'text-amber-600' : 'text-red-500'}`}>
                           {product.stock} in stock
                         </span>
@@ -219,110 +275,15 @@ export default function Dashboard() {
 
           {/* SETTINGS TAB */}
           {activeTab === "settings" && (
-            <motion.div 
-              key="settings"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4 }}
-              className="max-w-4xl mx-auto flex flex-col gap-8 pb-10"
-            >
-              {/* Header */}
-              <div>
-                <h1 className="text-3xl font-normal text-[rgba(30,50,90,0.9)] tracking-tight mb-1">Settings</h1>
-                <p className="text-sm text-[rgba(30,50,90,0.6)] font-normal">Manage your account preferences and application settings.</p>
-              </div>
-
-              {/* Settings Sections */}
-              <div className="flex flex-col gap-6">
-                
-                {/* Profile Section */}
-                <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm">
-                  <div className="flex items-center gap-3 mb-6 border-b border-white/40 pb-4">
-                    <div className="bg-blue-500/10 p-2 rounded-xl">
-                      <User className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <h2 className="text-lg font-medium text-[rgba(30,50,90,0.9)]">Profile Information</h2>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-sm font-medium text-[rgba(30,50,90,0.7)]">Full Name</label>
-                      <input type="text" defaultValue={userName} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] shadow-sm" />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-sm font-medium text-[rgba(30,50,90,0.7)]">Email Address</label>
-                      <input type="email" defaultValue="admin@stocksense.com" className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] shadow-sm" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Preferences Section */}
-                <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm">
-                  <div className="flex items-center gap-3 mb-6 border-b border-white/40 pb-4">
-                    <div className="bg-purple-500/10 p-2 rounded-xl">
-                      <Moon className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <h2 className="text-lg font-medium text-[rgba(30,50,90,0.9)]">Appearance & Preferences</h2>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-[rgba(30,50,90,0.9)]">Dark Mode</h3>
-                        <p className="text-xs text-[rgba(30,50,90,0.5)]">Toggle dark mode interface.</p>
-                      </div>
-                      <div className="w-12 h-6 bg-white/50 rounded-full border border-white/40 flex items-center p-1 cursor-pointer">
-                        <div className="w-4 h-4 bg-[rgba(30,50,90,0.3)] rounded-full transition-transform"></div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-[rgba(30,50,90,0.9)]">Compact View</h3>
-                        <p className="text-xs text-[rgba(30,50,90,0.5)]">Reduce spacing in data tables.</p>
-                      </div>
-                      <div className="w-12 h-6 bg-[rgba(30,50,90,0.7)] rounded-full flex items-center justify-end p-1 cursor-pointer shadow-inner">
-                        <div className="w-4 h-4 bg-white rounded-full shadow-sm transition-transform"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notifications Section */}
-                <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[1.5rem] p-6 shadow-sm">
-                  <div className="flex items-center gap-3 mb-6 border-b border-white/40 pb-4">
-                    <div className="bg-amber-500/10 p-2 rounded-xl">
-                      <Bell className="w-5 h-5 text-amber-600" />
-                    </div>
-                    <h2 className="text-lg font-medium text-[rgba(30,50,90,0.9)]">Notifications</h2>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-[rgba(30,50,90,0.9)]">Low Stock Alerts</h3>
-                        <p className="text-xs text-[rgba(30,50,90,0.5)]">Receive email when items drop below threshold.</p>
-                      </div>
-                      <div className="w-12 h-6 bg-[rgba(30,50,90,0.7)] rounded-full flex items-center justify-end p-1 cursor-pointer shadow-inner">
-                        <div className="w-4 h-4 bg-white rounded-full shadow-sm transition-transform"></div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-[rgba(30,50,90,0.9)]">Daily Summary</h3>
-                        <p className="text-xs text-[rgba(30,50,90,0.5)]">Get a daily digest of inventory changes.</p>
-                      </div>
-                      <div className="w-12 h-6 bg-white/50 rounded-full border border-white/40 flex items-center p-1 cursor-pointer">
-                        <div className="w-4 h-4 bg-[rgba(30,50,90,0.3)] rounded-full transition-transform"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end mt-2">
-                  <button className="flex items-center gap-2 bg-[rgba(30,50,90,0.8)] hover:bg-[rgba(30,50,90,1)] text-white px-6 py-2.5 rounded-full transition-colors text-sm shadow-md">
-                    <Save className="w-4 h-4" /> Save Changes
-                  </button>
-                </div>
-              </div>
-            </motion.div>
+            <SettingsTab
+              settings={settings}
+              loading={loading}
+              saving={saving}
+              hasUnsavedChanges={hasUnsavedChanges}
+              updateSection={updateSection}
+              save={save}
+              reset={reset}
+            />
           )}
 
           {/* OPERATIONS TAB */}

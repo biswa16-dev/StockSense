@@ -3,6 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import { getExchangeRates } from './services/exchangeRateService';
 
 dotenv.config();
 
@@ -33,6 +34,15 @@ const io = new Server(httpServer, {
 // Basic Route
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'StockSense API is running' });
+});
+
+app.get('/api/exchange-rates', async (req, res) => {
+  try {
+    const rates = await getExchangeRates();
+    res.json({ status: 'success', rates });
+  } catch (error: any) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
 });
 
 // Socket.io Connection
