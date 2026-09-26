@@ -298,17 +298,7 @@ export default function SettingsTab({
                 <option value="CHF">CHF (Fr)</option>
               </select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[rgba(30,50,90,0.7)]">Number Format</label>
-              <select
-                value={settings.regional.numberFormat}
-                onChange={e => updateSection('regional', 'numberFormat', e.target.value)}
-                className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] shadow-sm text-sm cursor-pointer outline-none"
-              >
-                <option value="Indian">Indian (1,00,000)</option>
-                <option value="International">International (100,000)</option>
-              </select>
-            </div>
+
           </div>
         </div>
 
