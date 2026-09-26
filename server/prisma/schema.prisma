@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum LocationType {
+  STORAGE
+  STAGING
+  RETURNS
+}
+
+enum TransactionType {
+  RECEIPT
+  DELIVERY
+  TRANSFER
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  DRAFT
+  VALIDATED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String    @db.VarChar(255)
+  email         String    @unique @db.VarChar(255)
+  passwordHash  String    @map("password_hash") @db.VarChar(255)
+  role          Role      @default(STAFF)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  
+  transactions  Transaction[]
+  
+  @@map("users")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(100)
+  description String?   @db.Text
+  
+  products    Product[]
+  
+  @@map("categories")
+}
+
+model Product {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String    @db.VarChar(255)
+  sku           String    @unique @db.VarChar(100)
+  categoryId    Int       @map("category_id")
+  unit          String    @db.VarChar(50)
+  reorderLevel  Int       @default(0) @map("reorder_level") // Enforced via application logic / DB CHECK constraint
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  category      Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  stockLevels   StockLevel[]
+  transactions  Transaction[]
+
+  @@map("products")
+}
+
+model Warehouse {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique @db.VarChar(100)
+  address   String?   @db.Text
+  isActive  Boolean   @default(true) @map("is_active")
+  
+  locations Location[]
+
+  @@map("warehouses")
+}
+
+model Location {
+  id          Int           @id @default(autoincrement())
+  warehouseId Int           @map("warehouse_id")
+  name        String        @db.VarChar(100)
+  type        LocationType  @default(STORAGE)
+  
+  warehouse   Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  stockLevels StockLevel[]
+  
+  // A location can be the source or destination of a transaction
+  transactionsFrom Transaction[] @relation("FromLocation")
+  transactionsTo   Transaction[] @relation("ToLocation")
+
+  @@map("locations")
+}
+
+model StockLevel {
+  id          Int       @id @default(autoincrement())
+  productId   String    @map("product_id") @db.Uuid
+  locationId  Int       @map("location_id")
+  quantity    Int       @default(0) // CHECK >= 0 handled in DB migrations
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  location    Location  @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, locationId])
+  @@map("stock_levels")
+}
+
+model Transaction {
+  id              String            @id @default(uuid()) @db.Uuid
+  productId       String            @map("product_id") @db.Uuid
+  fromLocationId  Int?              @map("from_location_id")
+  toLocationId    Int?              @map("to_location_id")
+  quantity        Int               // CHECK > 0
+  type            TransactionType
+  status          TransactionStatus @default(DRAFT)
+  reference       String?           @db.VarChar(100)
+  notes           String?           @db.Text
+  createdById     String            @map("created_by") @db.Uuid
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  fromLocation    Location? @relation("FromLocation", fields: [fromLocationId], references: [id], onDelete: Restrict)
+  toLocation      Location? @relation("ToLocation", fields: [toLocationId], references: [id], onDelete: Restrict)
+  createdBy       User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@map("transactions")
+}
