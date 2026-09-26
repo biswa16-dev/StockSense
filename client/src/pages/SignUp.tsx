@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Circle, Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Package, Eye, EyeOff } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 import { useGoogleLogin } from '@react-oauth/google';
 
 export default function SignUp() {
@@ -125,13 +125,17 @@ export default function SignUp() {
           }}
         >
           {/* Brand/Logo */}
-          <motion.div 
-            variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }} 
-            className="flex items-center gap-2"
-          >
-            <Circle className="w-6 h-6 fill-white text-white" />
-            <span className="text-xl font-semibold tracking-tight text-white drop-shadow-sm">StockSense</span>
-          </motion.div>
+          <Link to="/">
+            <motion.div 
+              variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }} 
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            >
+              <div className="bg-white/20 p-2 rounded-xl backdrop-blur-md">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-semibold tracking-tight text-white drop-shadow-sm">StockSense</span>
+            </motion.div>
+          </Link>
 
           {/* Heading Block */}
           <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}>

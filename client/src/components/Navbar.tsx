@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, User } from "lucide-react";
+import { ArrowUpRight, User, Package } from "lucide-react";
 
 export default function Navbar() {
   const [userName, setUserName] = useState("");
@@ -17,10 +17,22 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between py-6 px-6 md:px-10 w-full relative z-10">
-      <div className="flex-1 hidden md:block" />
+      <div className="flex-1 hidden md:flex items-center">
+        <Link to="/" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+          <div className="bg-[#47536b] p-2 rounded-xl">
+            <Package className="w-5 h-5 text-white" />
+          </div>
+          <span className="font-regular tracking-tighter text-xl text-[#47536b]">StockSense</span>
+        </Link>
+      </div>
 
-      <div className="md:hidden">
-        <span className="font-regular tracking-tighter text-xl text-[#47536b]">StockSense IMS</span>
+      <div className="md:hidden flex items-center">
+        <Link to="/" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+          <div className="bg-[#47536b] p-2 rounded-xl">
+            <Package className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-regular tracking-tighter text-lg text-[#47536b]">StockSense</span>
+        </Link>
       </div>
       <div className="flex-1 flex justify-end">
         {userName ? (
