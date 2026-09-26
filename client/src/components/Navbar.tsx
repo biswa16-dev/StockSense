@@ -7,22 +7,22 @@ export default function Navbar() {
     <nav className="flex items-center justify-between py-6 px-6 md:px-10 w-full relative z-10">
       <div className="flex-1 hidden md:block" />
       <ul className="hidden md:flex items-center gap-8 text-[rgb(45,45,45)] font-normal text-sm">
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">Ecosystem</li>
+        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">Features</li>
         <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">
-          Economics
+          Solutions
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </li>
-        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">Developers</li>
+        <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">Docs</li>
         <li className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 group">
-          Governance
+          Company
           <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
         </li>
       </ul>
       <div className="md:hidden">
-        <span className="font-regular tracking-tighter text-xl text-[rgba(30,50,90,0.9)]">RIVR</span>
+        <span className="font-regular tracking-tighter text-xl text-[rgba(30,50,90,0.9)]">StockSense</span>
       </div>
       <div className="flex-1 flex justify-end">
-        <Link to="/dashboard">
+        <a href="#dashboard-section">
           <motion.button 
             whileHover={{ scale: 1.02 }} 
             whileTap={{ scale: 0.98 }}
@@ -33,7 +33,7 @@ export default function Navbar() {
             </div>
             <span className="text-xs md:text-sm font-normal">Go to Dashboard</span>
           </motion.button>
-        </Link>
+        </a>
       </div>
     </nav>
   );
