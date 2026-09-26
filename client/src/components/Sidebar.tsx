@@ -64,7 +64,10 @@ export default function Sidebar({ activeTab, setActiveTab, userName = "Alex Merc
           <span className="font-normal text-sm">{userName}</span>
         </button>
         <button 
-          onClick={() => navigate('/')}
+          onClick={() => {
+            localStorage.removeItem("stockSenseUser");
+            window.location.href = '/';
+          }}
           className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 text-[rgba(30,50,90,0.6)] hover:bg-[rgba(220,53,69,0.1)] hover:text-[#dc3545] text-left"
         >
           <LogOut className="w-5 h-5" />
