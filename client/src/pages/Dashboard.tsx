@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Sidebar from "../components/Sidebar";
-<<<<<<< Updated upstream
-import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, User, Bell, Moon, Save, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock } from "lucide-react";
-=======
 import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock } from "lucide-react";
 import SettingsTab from "../components/SettingsTab";
 import { useSettings } from '../hooks/useSettings';
->>>>>>> Stashed changes
 
 // Existing mock data
 const kpis = [
