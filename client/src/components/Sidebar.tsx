@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { LayoutDashboard, Package, ArrowRightLeft, Settings, LogOut, User } from "lucide-react";
-import { Link } from "react-router-dom";
+
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -23,12 +23,12 @@ export default function Sidebar({ activeTab, setActiveTab, userName = "Alex Merc
       className="w-64 h-full flex flex-col justify-between bg-white/40 backdrop-blur-2xl border-r border-white/20 p-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
     >
       <div>
-        <Link to="/" className="flex items-center gap-2 mb-12 cursor-pointer hover:opacity-80 transition-opacity">
+        <a href="/" className="flex items-center gap-2 mb-12 cursor-pointer hover:opacity-80 transition-opacity">
           <div className="bg-[rgba(30,50,90,0.8)] p-2 rounded-xl">
             <Package className="w-5 h-5 text-white" />
           </div>
           <span className="font-regular tracking-tighter text-xl text-[rgba(30,50,90,0.9)]">StockSense</span>
-        </Link>
+        </a>
         <nav className="flex flex-col gap-2">
           {menuItems.map((item) => {
             const isActive = activeTab === item.id;
