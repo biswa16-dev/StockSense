@@ -62,6 +62,11 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [userName, setUserName] = useState("Demo User");
 
+  const [dashboardSearch, setDashboardSearch] = useState("");
+  const [dashboardFilter, setDashboardFilter] = useState("All Types");
+  const [productsSearch, setProductsSearch] = useState("");
+  const [opsSearch, setOpsSearch] = useState("");
+
   useEffect(() => {
     const user = localStorage.getItem("stockSenseUser");
     if (user) {
@@ -93,6 +98,33 @@ export default function Dashboard() {
     }
   };
 
+  const filteredDashboardProducts = products.filter(p => {
+    const searchMatch = p.sku.toLowerCase().includes(dashboardSearch.toLowerCase()) || p.name.toLowerCase().includes(dashboardSearch.toLowerCase());
+    
+    let filterMatch = true;
+    if (dashboardFilter === "Receipts") {
+      filterMatch = transactions.some(tx => tx.sku === p.sku && tx.type === "INBOUND");
+    } else if (dashboardFilter === "Deliveries") {
+      filterMatch = transactions.some(tx => tx.sku === p.sku && tx.type === "OUTBOUND");
+    } else if (dashboardFilter === "Internal Transfers") {
+      filterMatch = transactions.some(tx => tx.sku === p.sku && tx.type === "ADJUSTMENT");
+    }
+    
+    return searchMatch && filterMatch;
+  });
+
+  const filteredProductsGrid = products.filter(p => 
+    p.name.toLowerCase().includes(productsSearch.toLowerCase()) || 
+    p.sku.toLowerCase().includes(productsSearch.toLowerCase()) ||
+    p.category.toLowerCase().includes(productsSearch.toLowerCase())
+  );
+
+  const filteredTransactions = transactions.filter(tx =>
+    tx.id.toLowerCase().includes(opsSearch.toLowerCase()) ||
+    tx.sku.toLowerCase().includes(opsSearch.toLowerCase()) ||
+    tx.user.toLowerCase().includes(opsSearch.toLowerCase())
+  );
+
   return (
     <div className="w-full h-screen flex bg-[#f0f0f0] overflow-hidden">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userName={userName} />
@@ -119,7 +151,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(30,50,90,0.4)]" />
-                    <input type="text" placeholder="Search SKU..." className="pl-9 pr-4 py-2 rounded-full bg-white/50 backdrop-blur-md border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)] w-64" />
+                    <input type="text" value={dashboardSearch} onChange={(e) => setDashboardSearch(e.target.value)} placeholder="Search SKU..." className="pl-9 pr-4 py-2 rounded-full bg-white/50 backdrop-blur-md border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)] w-64" />
                   </div>
                 </div>
               </div>
@@ -151,10 +183,15 @@ export default function Dashboard() {
                   <h2 className="text-sm font-normal text-[rgba(30,50,90,0.8)]">Dynamic Filters</h2>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="px-4 py-2 rounded-full bg-white/60 text-[rgba(30,50,90,0.9)] text-sm font-normal border border-white/50 cursor-pointer shadow-sm">All Types</div>
-                  <div className="px-4 py-2 rounded-full bg-white/30 text-[rgba(30,50,90,0.6)] text-sm font-normal border border-transparent hover:bg-white/40 hover:border-white/20 cursor-pointer transition-all">Receipts</div>
-                  <div className="px-4 py-2 rounded-full bg-white/30 text-[rgba(30,50,90,0.6)] text-sm font-normal border border-transparent hover:bg-white/40 hover:border-white/20 cursor-pointer transition-all">Deliveries</div>
-                  <div className="px-4 py-2 rounded-full bg-white/30 text-[rgba(30,50,90,0.6)] text-sm font-normal border border-transparent hover:bg-white/40 hover:border-white/20 cursor-pointer transition-all">Internal Transfers</div>
+                  {["All Types", "Receipts", "Deliveries", "Internal Transfers"].map(f => (
+                    <div 
+                      key={f}
+                      onClick={() => setDashboardFilter(f)}
+                      className={`px-4 py-2 rounded-full text-sm font-normal cursor-pointer transition-all shadow-sm ${dashboardFilter === f ? 'bg-white/60 text-[rgba(30,50,90,0.9)] border border-white/50' : 'bg-white/30 text-[rgba(30,50,90,0.6)] border border-transparent hover:bg-white/40 hover:border-white/20'}`}
+                    >
+                      {f}
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -177,7 +214,7 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/20">
-                      {products.map(p => (
+                      {filteredDashboardProducts.map(p => (
                         <tr key={p.id} className="hover:bg-white/20 transition-colors cursor-pointer" onClick={() => setActiveTab('products')}>
                           <td className="py-3 px-4 text-sm font-medium text-[rgba(30,50,90,0.9)]">{p.sku}</td>
                           <td className="py-3 px-4 text-sm text-[rgba(30,50,90,0.8)]">{p.name}</td>
@@ -217,7 +254,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(30,50,90,0.4)]" />
-                    <input type="text" placeholder="Search products..." className="pl-9 pr-4 py-2 rounded-full bg-white/50 backdrop-blur-md border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)] w-64" />
+                    <input type="text" value={productsSearch} onChange={(e) => setProductsSearch(e.target.value)} placeholder="Search products..." className="pl-9 pr-4 py-2 rounded-full bg-white/50 backdrop-blur-md border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)] w-64" />
                   </div>
                   <button className="flex items-center gap-2 bg-[rgba(30,50,90,0.8)] hover:bg-[rgba(30,50,90,1)] text-white px-4 py-2 rounded-full transition-colors text-sm">
                     <Plus className="w-4 h-4" /> Add Product
@@ -227,7 +264,7 @@ export default function Dashboard() {
 
               {/* Product Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {products.map((product, index) => (
+                {filteredProductsGrid.map((product, index) => (
                   <motion.div 
                     key={product.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -346,7 +383,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2">
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[rgba(30,50,90,0.4)]" />
-                      <input type="text" placeholder="Search TX ID..." className="pl-9 pr-4 py-1.5 rounded-full bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)] w-48" />
+                      <input type="text" value={opsSearch} onChange={(e) => setOpsSearch(e.target.value)} placeholder="Search TX ID..." className="pl-9 pr-4 py-1.5 rounded-full bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)] w-48" />
                     </div>
                   </div>
                 </div>
@@ -365,7 +402,7 @@ export default function Dashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/20">
-                      {transactions.map(tx => (
+                      {filteredTransactions.map(tx => (
                         <tr key={tx.id} className="hover:bg-white/40 transition-colors cursor-pointer">
                           <td className="py-3 px-4 text-sm font-medium text-[rgba(30,50,90,0.9)] flex items-center gap-2">
                             <FileText className="w-4 h-4 text-[rgba(30,50,90,0.4)]" /> {tx.id}
