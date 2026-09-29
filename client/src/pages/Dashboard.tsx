@@ -114,6 +114,34 @@ export default function Dashboard() {
   const [isAddingWarehouse, setIsAddingWarehouse] = useState(false);
   const [newWarehouse, setNewWarehouse] = useState({ name: "", shortCode: "", address: "", image: "" });
 
+  interface Location {
+    id: number;
+    name: string;
+    shortCode: string;
+    warehouseId: number;
+    suppliedTo: string;
+    suppliedUnits: number;
+  }
+
+  const defaultLocations: Location[] = [
+    { id: 1, name: "Storage Room A", shortCode: "SRA-01", warehouseId: 1, suppliedTo: "Retail Store North", suppliedUnits: 150 },
+    { id: 2, name: "Cold Storage B", shortCode: "CSB-02", warehouseId: 2, suppliedTo: "Wholesale Partner X", suppliedUnits: 500 },
+  ];
+
+  const [locations, setLocations] = useState<Location[]>(() => {
+    const saved = localStorage.getItem("stockSenseLocations");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        console.error("Failed to parse locations");
+      }
+    }
+    return defaultLocations;
+  });
+  const [isAddingLocation, setIsAddingLocation] = useState(false);
+  const [newLocation, setNewLocation] = useState({ name: "", shortCode: "", warehouseId: 0, suppliedTo: "", suppliedUnits: 0 });
+
 
 
   const { settings, loading, saving, hasUnsavedChanges, exchangeRates, updateSection, save, reset } = useSettings();
@@ -477,6 +505,119 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* LOCATION TAB */}
+          {activeTab === "location" && (
+            <motion.div 
+              key="location"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
+              className="max-w-7xl mx-auto flex flex-col gap-8 pb-10"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-normal text-[rgba(30,50,90,0.9)] tracking-tight mb-1">Locations</h1>
+                  <p className="text-sm text-[rgba(30,50,90,0.6)] font-normal">This holds the multiple locations of warehouse, supply routes, and units.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setIsAddingLocation(!isAddingLocation)} className="flex items-center gap-2 bg-[rgba(30,50,90,0.8)] hover:bg-[rgba(30,50,90,1)] text-white px-4 py-2 rounded-full transition-colors text-sm">
+                    <Plus className="w-4 h-4" /> {isAddingLocation ? "Cancel" : "Add Location"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Add Location Form */}
+              <AnimatePresence>
+                {isAddingLocation && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }} 
+                    animate={{ opacity: 1, height: 'auto' }} 
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-[2rem] p-8 flex flex-col gap-6 shadow-sm overflow-hidden"
+                  >
+                    <h3 className="text-lg font-medium text-[rgba(30,50,90,0.9)]">Add New Location</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Name:</label>
+                        <input type="text" value={newLocation.name} onChange={e => setNewLocation({...newLocation, name: e.target.value})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)]" placeholder="e.g. Storage Room A" />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Short Code:</label>
+                        <input type="text" value={newLocation.shortCode} onChange={e => setNewLocation({...newLocation, shortCode: e.target.value})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)]" placeholder="e.g. SRA-01" />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Warehouse (WH):</label>
+                        <select value={newLocation.warehouseId} onChange={e => setNewLocation({...newLocation, warehouseId: parseInt(e.target.value)})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)]">
+                          <option value={0} disabled>Select a Warehouse</option>
+                          {warehouses.map(wh => (
+                            <option key={wh.id} value={wh.id}>{wh.name} ({wh.shortCode})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Supplied To (Whom):</label>
+                        <input type="text" value={newLocation.suppliedTo} onChange={e => setNewLocation({...newLocation, suppliedTo: e.target.value})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)]" placeholder="e.g. Retail Store North" />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Units Supplied:</label>
+                        <input type="number" value={newLocation.suppliedUnits || ""} onChange={e => setNewLocation({...newLocation, suppliedUnits: parseInt(e.target.value) || 0})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)]" placeholder="e.g. 150" />
+                      </div>
+                    </div>
+                    <div className="flex justify-end mt-2">
+                      <button 
+                        onClick={() => {
+                          if (newLocation.name && newLocation.shortCode && newLocation.warehouseId && newLocation.suppliedTo) {
+                            const updatedLocations = [...locations, { id: Date.now(), ...newLocation }];
+                            setLocations(updatedLocations);
+                            localStorage.setItem("stockSenseLocations", JSON.stringify(updatedLocations));
+                            setNewLocation({ name: "", shortCode: "", warehouseId: 0, suppliedTo: "", suppliedUnits: 0 });
+                            setIsAddingLocation(false);
+                          }
+                        }}
+                        className="bg-[rgba(30,50,90,0.9)] text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-[rgba(30,50,90,1)] transition-colors"
+                      >
+                        Save Location
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Locations List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {locations.map(loc => {
+                  const wh = warehouses.find(w => w.id === loc.warehouseId);
+                  return (
+                    <div key={loc.id} className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[2rem] p-8 flex flex-col gap-6 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-4">
+                        <label className="w-28 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Name:</label>
+                        <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{loc.name}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <label className="w-28 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Short Code:</label>
+                        <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{loc.shortCode}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <label className="w-28 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Warehouse:</label>
+                        <div className="flex-1 px-4 py-2 rounded-xl bg-[rgba(30,50,90,0.05)] text-sm font-medium text-[rgba(30,50,90,0.9)]">{wh ? wh.name : "Unknown"}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <label className="w-28 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Supplied To:</label>
+                        <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{loc.suppliedTo}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <label className="w-28 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Units:</label>
+                        <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm font-semibold text-[rgba(30,50,90,0.9)]">{loc.suppliedUnits}</div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
           )}

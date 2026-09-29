@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { LayoutDashboard, Package, ArrowRightLeft, Settings, LogOut, User, Warehouse } from "lucide-react";
+import { LayoutDashboard, Package, ArrowRightLeft, Settings, LogOut, User, Warehouse, MapPin } from "lucide-react";
 
 interface SidebarProps {
   activeTab: string;
@@ -12,6 +12,7 @@ export default function Sidebar({ activeTab, setActiveTab, userName = "Alex Merc
     { name: "Dashboard", id: "dashboard", icon: LayoutDashboard },
     { name: "Products", id: "products", icon: Package },
     { name: "Warehouse", id: "warehouse", icon: Warehouse },
+    { name: "Locations", id: "location", icon: MapPin },
     { name: "Operations", id: "operations", icon: ArrowRightLeft },
     { name: "Settings", id: "settings", icon: Settings },
   ];
