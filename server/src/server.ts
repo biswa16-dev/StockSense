@@ -79,6 +79,60 @@ app.get('/api/dashboard', async (req, res) => {
   }
 });
 
+import bcrypt from 'bcrypt';
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { email, password, name } = req.body;
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already in use" });
+    }
+    const password_hash = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { email, password_hash, name, role: 'USER' }
+    });
+    res.json({ status: 'success', user: { name: user.name, email: user.email } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    
+    // Check if it's a Google user without a password
+    if (user.password_hash === 'GOOGLE_AUTH') {
+      return res.status(400).json({ error: "Please log in with Google" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
+    
+    res.json({ status: 'success', user: { name: user.name, email: user.email } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { email, name } = req.body;
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      user = await prisma.user.create({
+        data: { email, name, password_hash: 'GOOGLE_AUTH', role: 'USER' }
+      });
+    }
+    res.json({ status: 'success', user: { name: user.name, email: user.email } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Socket.io Connection
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);

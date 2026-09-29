@@ -16,7 +16,7 @@ export default function SignUp() {
   const [successMsg, setSuccessMsg] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
@@ -27,48 +27,32 @@ export default function SignUp() {
     }
 
     setIsLoading(true);
-    // Simulate backend network delay
-    setTimeout(() => {
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const finalName = `${firstName || "Demo"} ${lastName || "User"}`.trim();
+
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name: finalName })
+      });
+
+      const data = await response.json();
       setIsLoading(false);
-      
-      const usersDB = JSON.parse(localStorage.getItem("stockSenseUsersDB") || "{}");
 
-      if (!isLogin) {
-        // Registration Flow
-        if (usersDB[email]) {
-          setErrorMsg("An account with this email already exists.");
-          return;
-        }
-        
-        const finalName = `${firstName || "Demo"} ${lastName || "User"}`.trim();
-        usersDB[email] = {
-          name: finalName,
-          password: password,
-        };
-        localStorage.setItem("stockSenseUsersDB", JSON.stringify(usersDB));
-        
-        // Auto-login after successful registration
-        localStorage.setItem("stockSenseUser", JSON.stringify({ name: finalName }));
-        navigate("/dashboard");
-      } else {
-        // Login Flow
-        const user = usersDB[email];
-        
-        if (!user) {
-           setErrorMsg("No account found with this email.");
-           return;
-        }
-
-        if (user.password !== password) {
-           setErrorMsg("Incorrect password.");
-           return;
-        }
-
-        // Login successful
-        localStorage.setItem("stockSenseUser", JSON.stringify({ name: user.name }));
-        navigate("/dashboard");
+      if (!response.ok) {
+        setErrorMsg(data.error || "Authentication failed");
+        return;
       }
-    }, 1000);
+
+      localStorage.setItem("stockSenseUser", JSON.stringify({ name: data.user.name, email: data.user.email }));
+      navigate("/dashboard");
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMsg("Network error connecting to server.");
+    }
   };
 
   const loginWithGoogle = useGoogleLogin({
@@ -79,8 +63,22 @@ export default function SignUp() {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }).then(res => res.json());
         
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${API_URL}/api/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userInfo.email, name: userInfo.name || "Google User" })
+        });
+        
+        const data = await response.json();
         setIsLoading(false);
-        localStorage.setItem("stockSenseUser", JSON.stringify({ name: userInfo.name || "Google User" }));
+
+        if (!response.ok) {
+          setErrorMsg(data.error || "Google authentication failed");
+          return;
+        }
+
+        localStorage.setItem("stockSenseUser", JSON.stringify({ name: data.user.name, email: data.user.email }));
         navigate("/dashboard");
       } catch {
         setIsLoading(false);
