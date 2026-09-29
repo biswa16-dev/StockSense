@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Sidebar from "../components/Sidebar";
 import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock, Trash2 } from "lucide-react";
@@ -843,6 +843,18 @@ export default function Dashboard() {
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [txModalType, setTxModalType] = useState<string | null>(null);
 
+  useEffect(() => {
+    // If backend is deployed, replace this URL with the live Vercel URL
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    fetch(`${API_URL}/api/dashboard`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.products) {
+          setProducts(data.products);
+        }
+      })
+      .catch(err => console.error("Failed to fetch dashboard data from backend", err));
+  }, []);
   interface Warehouse {
     id: number;
     name: string;

@@ -36,12 +36,46 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'StockSense API is running' });
 });
 
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
 app.get('/api/exchange-rates', async (req, res) => {
   try {
     const rates = await getExchangeRates();
     res.json({ status: 'success', rates });
   } catch (error: any) {
     res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+app.get('/api/dashboard', async (req, res) => {
+  try {
+    const dbProducts = await prisma.product.findMany({
+      include: {
+        category: true,
+        stockLevels: true
+      }
+    });
+
+    const products = dbProducts.map(p => {
+      // Map Prisma schema to the expected frontend structure
+      const totalStock = p.stockLevels.reduce((sum, sl) => sum + sl.quantity, 0);
+      return {
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        price: 50000.00, // Dummy price as it's missing in DB schema
+        stock: totalStock,
+        category: p.category.name,
+        image: "" // Empty image string
+      };
+    });
+
+    res.json({ products });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch dashboard data" });
   }
 });
 
