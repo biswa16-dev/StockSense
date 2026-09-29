@@ -805,7 +805,7 @@ export default function Dashboard() {
           )}
 
           {/* OTHER TABS PLACEHOLDERS */}
-          {activeTab !== "dashboard" && activeTab !== "products" && activeTab !== "warehouse" && activeTab !== "settings" && activeTab !== "operations" && (
+          {activeTab !== "dashboard" && activeTab !== "products" && activeTab !== "warehouse" && activeTab !== "settings" && activeTab !== "operations" && activeTab !== "location" && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
