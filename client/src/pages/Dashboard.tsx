@@ -114,6 +114,8 @@ export default function Dashboard() {
   const [isAddingWarehouse, setIsAddingWarehouse] = useState(false);
   const [newWarehouse, setNewWarehouse] = useState({ name: "", shortCode: "", address: "", image: "" });
 
+  type ProductStatus = "Pending" | "Dispatched" | "In Transit" | "Delivered";
+
   interface Location {
     id: number;
     name: string;
@@ -121,11 +123,12 @@ export default function Dashboard() {
     warehouseId: number;
     suppliedTo: string;
     suppliedUnits: number;
+    status: ProductStatus;
   }
 
   const defaultLocations: Location[] = [
-    { id: 1, name: "Storage Room A", shortCode: "SRA-01", warehouseId: 1, suppliedTo: "Retail Store North", suppliedUnits: 150 },
-    { id: 2, name: "Cold Storage B", shortCode: "CSB-02", warehouseId: 2, suppliedTo: "Wholesale Partner X", suppliedUnits: 500 },
+    { id: 1, name: "Storage Room A", shortCode: "SRA-01", warehouseId: 1, suppliedTo: "Retail Store North", suppliedUnits: 150, status: "In Transit" },
+    { id: 2, name: "Cold Storage B", shortCode: "CSB-02", warehouseId: 2, suppliedTo: "Wholesale Partner X", suppliedUnits: 500, status: "Delivered" },
   ];
 
   const [locations, setLocations] = useState<Location[]>(() => {
@@ -140,7 +143,7 @@ export default function Dashboard() {
     return defaultLocations;
   });
   const [isAddingLocation, setIsAddingLocation] = useState(false);
-  const [newLocation, setNewLocation] = useState({ name: "", shortCode: "", warehouseId: 0, suppliedTo: "", suppliedUnits: 0 });
+  const [newLocation, setNewLocation] = useState({ name: "", shortCode: "", warehouseId: 0, suppliedTo: "", suppliedUnits: 0, status: "Pending" as ProductStatus });
 
 
 
@@ -568,6 +571,15 @@ export default function Dashboard() {
                         <label className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Units Supplied:</label>
                         <input type="number" value={newLocation.suppliedUnits || ""} onChange={e => setNewLocation({...newLocation, suppliedUnits: parseInt(e.target.value) || 0})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)]" placeholder="e.g. 150" />
                       </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Initial Status:</label>
+                        <select value={newLocation.status} onChange={e => setNewLocation({...newLocation, status: e.target.value as ProductStatus})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)]">
+                          <option value="Pending">Pending</option>
+                          <option value="Dispatched">Dispatched</option>
+                          <option value="In Transit">In Transit</option>
+                          <option value="Delivered">Delivered</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="flex justify-end mt-2">
                       <button 
@@ -576,7 +588,7 @@ export default function Dashboard() {
                             const updatedLocations = [...locations, { id: Date.now(), ...newLocation }];
                             setLocations(updatedLocations);
                             localStorage.setItem("stockSenseLocations", JSON.stringify(updatedLocations));
-                            setNewLocation({ name: "", shortCode: "", warehouseId: 0, suppliedTo: "", suppliedUnits: 0 });
+                            setNewLocation({ name: "", shortCode: "", warehouseId: 0, suppliedTo: "", suppliedUnits: 0, status: "Pending" as ProductStatus });
                             setIsAddingLocation(false);
                           }
                         }}
@@ -614,6 +626,41 @@ export default function Dashboard() {
                       <div className="flex items-center gap-4">
                         <label className="w-28 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Units:</label>
                         <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm font-semibold text-[rgba(30,50,90,0.9)]">{loc.suppliedUnits}</div>
+                      </div>
+
+                      {/* Vertical Status Flow */}
+                      <div className="mt-2 pt-6 border-t border-[rgba(30,50,90,0.1)]">
+                        <label className="text-sm font-medium text-[rgba(30,50,90,0.8)] mb-6 block text-center">Supply Status Tracking</label>
+                        <div className="flex flex-col gap-0 pl-12 md:pl-20">
+                          {(["Pending", "Dispatched", "In Transit", "Delivered"] as ProductStatus[]).map((statusStep, index, arr) => {
+                            // Ensure backward compatibility if status is undefined in local storage
+                            const currentStatus = loc.status || "Pending";
+                            const isActive = currentStatus === statusStep;
+                            const isPast = arr.indexOf(statusStep) <= arr.indexOf(currentStatus);
+                            return (
+                              <div key={statusStep} className="flex gap-4 relative cursor-pointer group" onClick={() => {
+                                const updatedLocations = locations.map(l => l.id === loc.id ? { ...l, status: statusStep } : l);
+                                setLocations(updatedLocations);
+                                localStorage.setItem("stockSenseLocations", JSON.stringify(updatedLocations));
+                              }}>
+                                {/* Vertical line for all except last */}
+                                {index < arr.length - 1 && (
+                                  <div className={`absolute left-2.5 top-6 bottom-0 w-[2px] -ml-[1px] ${arr.indexOf(statusStep) < arr.indexOf(currentStatus) ? "bg-[rgba(30,50,90,0.8)]" : "bg-[rgba(30,50,90,0.1)] group-hover:bg-[rgba(30,50,90,0.3)] transition-colors"}`} />
+                                )}
+                                {/* Circle marker */}
+                                <div className="relative z-10 flex-shrink-0 mt-1">
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center bg-white transition-colors ${isPast ? "border-[rgba(30,50,90,0.8)]" : "border-[rgba(30,50,90,0.2)] group-hover:border-[rgba(30,50,90,0.5)]"}`}>
+                                    {isPast && <div className="w-2.5 h-2.5 rounded-full bg-[rgba(30,50,90,0.8)]" />}
+                                  </div>
+                                </div>
+                                {/* Text */}
+                                <div className={`pb-6 text-sm transition-colors ${isActive ? "font-semibold text-[rgba(30,50,90,0.9)]" : isPast ? "font-medium text-[rgba(30,50,90,0.6)]" : "font-normal text-[rgba(30,50,90,0.4)] group-hover:text-[rgba(30,50,90,0.6)]"}`}>
+                                  {statusStep}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   );
