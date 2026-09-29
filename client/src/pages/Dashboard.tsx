@@ -155,6 +155,270 @@ const StatusTrackingFlow = ({ loc, locations, setLocations }: { loc: Location, l
   );
 };
 
+type ReceiptStatus = "Draft" | "Ready" | "Done";
+interface ReceiptProduct {
+  sku: string;
+  name: string;
+  quantity: number;
+}
+interface Receipt {
+  id: string;
+  receiveFrom: string;
+  scheduleDate: string;
+  responsible: string;
+  status: ReceiptStatus;
+  products: ReceiptProduct[];
+}
+
+const ReceiptsManager = ({ userName, products }: { userName: string, products: any[] }) => {
+  const [receipts, setReceipts] = useState<Receipt[]>(() => {
+    const saved = localStorage.getItem("stockSenseReceipts");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      {
+        id: "WH/IN/0001",
+        receiveFrom: "Vendor Alpha",
+        scheduleDate: new Date().toISOString().split('T')[0],
+        responsible: userName,
+        status: "Draft",
+        products: [
+          { sku: "FURN-SOF-01", name: "Premium Leather Sofa", quantity: 6 }
+        ]
+      }
+    ];
+  });
+  
+  const [expandedId, setExpandedId] = useState<string | null>("WH/IN/0001");
+
+  const saveReceipts = (newReceipts: Receipt[]) => {
+    setReceipts(newReceipts);
+    localStorage.setItem("stockSenseReceipts", JSON.stringify(newReceipts));
+  };
+
+  const handleCreateNew = () => {
+    const newId = `WH/IN/${String(receipts.length + 1).padStart(4, '0')}`;
+    const newReceipt: Receipt = {
+      id: newId,
+      receiveFrom: "",
+      scheduleDate: new Date().toISOString().split('T')[0],
+      responsible: userName,
+      status: "Draft",
+      products: []
+    };
+    saveReceipts([newReceipt, ...receipts]);
+    setExpandedId(newId);
+  };
+
+  const updateReceipt = (id: string, updates: Partial<Receipt>) => {
+    saveReceipts(receipts.map(r => r.id === id ? { ...r, ...updates } : r));
+  };
+
+  const Breadcrumb = ({ status, receiptStatus }: { status: ReceiptStatus, receiptStatus: ReceiptStatus }) => {
+    const isActive = status === receiptStatus;
+    const isDone = status === 'Done' && receiptStatus === 'Done';
+    return (
+      <div className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${isActive ? (isDone ? 'bg-green-500 text-white' : 'bg-[rgba(30,50,90,0.8)] text-white') : 'text-[rgba(30,50,90,0.5)]'}`}>
+        {status}
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-4 w-full">
+       <div className="flex justify-between items-center bg-white/40 backdrop-blur-xl border border-white/30 rounded-[2rem] p-6 shadow-sm">
+         <div>
+           <h3 className="text-lg font-normal text-[rgba(30,50,90,0.9)]">Receipts Management</h3>
+           <p className="text-sm text-[rgba(30,50,90,0.6)]">Manage inbound inventory receipts.</p>
+         </div>
+         <button onClick={handleCreateNew} className="flex items-center gap-2 bg-[rgba(30,50,90,0.8)] hover:bg-[rgba(30,50,90,1)] text-white px-4 py-2 rounded-full transition-colors text-sm shadow-sm">
+           <Plus className="w-4 h-4" /> New Receipt
+         </button>
+       </div>
+       
+       <div className="flex flex-col gap-3">
+         {receipts.map(receipt => (
+           <div key={receipt.id} className="bg-white/50 backdrop-blur-xl border border-white/40 rounded-2xl overflow-hidden shadow-sm transition-all">
+             <button 
+               onClick={() => setExpandedId(expandedId === receipt.id ? null : receipt.id)}
+               className="w-full flex items-center justify-between p-5 hover:bg-white/60 transition-colors"
+             >
+               <div className="flex items-center gap-6">
+                 <span className="font-semibold text-[rgba(30,50,90,0.9)] w-28 text-left">{receipt.id}</span>
+                 <span className="text-sm text-[rgba(30,50,90,0.6)] w-32 text-left truncate">{receipt.receiveFrom || "New Vendor"}</span>
+                 <span className="text-sm text-[rgba(30,50,90,0.6)]">{receipt.scheduleDate}</span>
+               </div>
+               <div className="flex items-center gap-4">
+                 <span className={`px-3 py-1 rounded-md text-xs font-medium ${
+                   receipt.status === 'Done' ? 'bg-green-500/10 text-green-600' : 
+                   receipt.status === 'Ready' ? 'bg-amber-500/10 text-amber-600' : 'bg-[rgba(30,50,90,0.1)] text-[rgba(30,50,90,0.6)]'
+                 }`}>
+                   {receipt.status}
+                 </span>
+                 {expandedId === receipt.id ? <ArrowUp className="w-4 h-4 text-[rgba(30,50,90,0.4)]" /> : <ArrowDown className="w-4 h-4 text-[rgba(30,50,90,0.4)]" />}
+               </div>
+             </button>
+             
+             <AnimatePresence>
+               {expandedId === receipt.id && (
+                 <motion.div 
+                   initial={{ height: 0, opacity: 0 }}
+                   animate={{ height: 'auto', opacity: 1 }}
+                   exit={{ height: 0, opacity: 0 }}
+                   className="border-t border-white/30 bg-white/20"
+                 >
+                   <div className="p-6 md:p-8 flex flex-col gap-8">
+                     {/* Action bar */}
+                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                       <div className="flex flex-wrap items-center gap-3">
+                         {receipt.status === 'Draft' && (
+                           <button onClick={() => updateReceipt(receipt.id, { status: 'Ready' })} className="px-5 py-2 bg-[rgba(30,50,90,0.8)] text-white rounded-md text-sm font-medium hover:bg-[rgba(30,50,90,1)] transition-colors shadow-sm">
+                             TODO
+                           </button>
+                         )}
+                         {receipt.status === 'Ready' && (
+                           <button onClick={() => updateReceipt(receipt.id, { status: 'Done' })} className="px-5 py-2 bg-[rgba(30,50,90,0.8)] text-white rounded-md text-sm font-medium hover:bg-[rgba(30,50,90,1)] transition-colors shadow-sm">
+                             VALIDATE
+                           </button>
+                         )}
+                         {receipt.status === 'Done' && (
+                           <button onClick={() => window.print()} className="px-5 py-2 bg-white/60 border border-white/60 text-[rgba(30,50,90,0.8)] rounded-md text-sm font-medium hover:bg-white/80 transition-colors shadow-sm">
+                             PRINT
+                           </button>
+                         )}
+                         <button onClick={() => setExpandedId(null)} className="px-5 py-2 bg-white/40 border border-white/40 text-[rgba(30,50,90,0.8)] rounded-md text-sm font-medium hover:bg-white/60 transition-colors shadow-sm">
+                           CANCEL
+                         </button>
+                       </div>
+                       
+                       <div className="flex items-center bg-white/40 rounded-full p-1 overflow-hidden shadow-sm">
+                         <Breadcrumb status="Draft" receiptStatus={receipt.status} />
+                         <span className="text-[rgba(30,50,90,0.3)] mx-1 text-xs">&gt;</span>
+                         <Breadcrumb status="Ready" receiptStatus={receipt.status} />
+                         <span className="text-[rgba(30,50,90,0.3)] mx-1 text-xs">&gt;</span>
+                         <Breadcrumb status="Done" receiptStatus={receipt.status} />
+                       </div>
+                     </div>
+                     
+                     {/* Fields */}
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                       <div className="flex flex-col gap-6">
+                         <h4 className="text-xl font-medium text-[rgba(30,50,90,0.9)]">{receipt.id}</h4>
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Receive From</label>
+                           <input 
+                             type="text" 
+                             value={receipt.receiveFrom}
+                             onChange={(e) => updateReceipt(receipt.id, { receiveFrom: e.target.value })}
+                             disabled={receipt.status !== 'Draft'}
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.2)] focus:border-[rgba(30,50,90,0.6)] py-1.5 text-[rgba(30,50,90,0.9)] outline-none disabled:opacity-70 transition-colors"
+                             placeholder="e.g. Vendor Name"
+                           />
+                         </div>
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Responsible</label>
+                           <input 
+                             type="text" 
+                             value={receipt.responsible}
+                             disabled
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.1)] py-1.5 text-[rgba(30,50,90,0.6)] outline-none"
+                           />
+                         </div>
+                       </div>
+                       <div className="flex flex-col gap-6 pt-12 md:pt-14">
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Schedule Date</label>
+                           <input 
+                             type="date" 
+                             value={receipt.scheduleDate}
+                             onChange={(e) => updateReceipt(receipt.id, { scheduleDate: e.target.value })}
+                             disabled={receipt.status !== 'Draft'}
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.2)] focus:border-[rgba(30,50,90,0.6)] py-1.5 text-[rgba(30,50,90,0.9)] outline-none disabled:opacity-70 transition-colors"
+                           />
+                         </div>
+                       </div>
+                     </div>
+                     
+                     {/* Products */}
+                     <div className="mt-4 border border-white/40 rounded-xl overflow-hidden bg-white/40 shadow-sm">
+                       <div className="px-5 py-3 bg-white/50 border-b border-white/40 font-medium text-sm text-[rgba(30,50,90,0.8)]">Products</div>
+                       <table className="w-full text-left">
+                         <thead>
+                           <tr className="border-b border-white/20">
+                             <th className="py-3 px-5 text-xs font-semibold text-[rgba(30,50,90,0.6)] uppercase tracking-wider">Product</th>
+                             <th className="py-3 px-5 text-xs font-semibold text-[rgba(30,50,90,0.6)] uppercase tracking-wider text-right w-32">Quantity</th>
+                             {receipt.status === 'Draft' && <th className="py-3 px-5 w-12"></th>}
+                           </tr>
+                         </thead>
+                         <tbody>
+                           {receipt.products.map((p, i) => (
+                             <tr key={i} className="border-b border-white/10 last:border-0 group">
+                               <td className="py-3 px-5 text-sm text-[rgba(30,50,90,0.8)] font-medium">[{p.sku}] {p.name}</td>
+                               <td className="py-3 px-5 text-right">
+                                 <input 
+                                   type="number" 
+                                   min="1"
+                                   value={p.quantity}
+                                   disabled={receipt.status !== 'Draft'}
+                                   onChange={(e) => {
+                                     const newProducts = [...receipt.products];
+                                     newProducts[i].quantity = parseInt(e.target.value) || 0;
+                                     updateReceipt(receipt.id, { products: newProducts });
+                                   }}
+                                   className="w-16 bg-white/50 border border-white/60 rounded px-2 py-1 text-right text-sm text-[rgba(30,50,90,0.9)] outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] disabled:opacity-70 disabled:bg-transparent disabled:border-transparent transition-all"
+                                 />
+                               </td>
+                               {receipt.status === 'Draft' && (
+                                 <td className="py-3 px-5 text-right">
+                                   <button onClick={() => {
+                                     const newProducts = [...receipt.products];
+                                     newProducts.splice(i, 1);
+                                     updateReceipt(receipt.id, { products: newProducts });
+                                   }} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded">
+                                     <Trash2 className="w-4 h-4" />
+                                   </button>
+                                 </td>
+                               )}
+                             </tr>
+                           ))}
+                           {receipt.products.length === 0 && (
+                             <tr>
+                               <td colSpan={receipt.status === 'Draft' ? 3 : 2} className="py-6 text-center text-sm text-[rgba(30,50,90,0.5)] italic">No products added yet.</td>
+                             </tr>
+                           )}
+                           {receipt.status === 'Draft' && (
+                             <tr className="bg-white/20 hover:bg-white/30 transition-colors cursor-pointer" onClick={() => {
+                                const existingSkus = receipt.products.map(p => p.sku);
+                                const availableProduct = products.find(p => !existingSkus.includes(p.sku)) || products[0];
+                                if (availableProduct) {
+                                  updateReceipt(receipt.id, { 
+                                    products: [...receipt.products, { sku: availableProduct.sku, name: availableProduct.name, quantity: 1 }] 
+                                  });
+                                }
+                             }}>
+                               <td colSpan={3} className="py-3 px-5">
+                                 <div className="text-sm text-[rgba(30,50,90,0.7)] hover:text-[rgba(30,50,90,1)] font-medium flex items-center gap-1.5 transition-colors">
+                                   <Plus className="w-4 h-4" /> Add Product Line
+                                 </div>
+                               </td>
+                             </tr>
+                           )}
+                         </tbody>
+                       </table>
+                     </div>
+                     
+                   </div>
+                 </motion.div>
+               )}
+             </AnimatePresence>
+           </div>
+         ))}
+       </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [userName] = useState(() => {
@@ -370,9 +634,12 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Products Table */}
-              <div className="flex-1 w-full bg-white/40 backdrop-blur-xl border border-white/30 rounded-[2rem] p-6 overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between mb-4">
+              {/* Conditional Display: Receipts Manager or Current Inventory Table */}
+              {dashboardFilter === "Receipts" ? (
+                <ReceiptsManager userName={userName} products={products} />
+              ) : (
+                <div className="flex-1 w-full bg-white/40 backdrop-blur-xl border border-white/30 rounded-[2rem] p-6 overflow-hidden flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-normal text-[rgba(30,50,90,0.9)]">Current Inventory</h3>
                   <button onClick={() => setActiveTab('products')} className="text-xs font-normal text-[rgba(30,50,90,0.8)] hover:underline cursor-pointer">View All Products &rarr;</button>
                 </div>
@@ -416,6 +683,7 @@ export default function Dashboard() {
                   </table>
                 </div>
               </div>
+              )}
             </motion.div>
           )}
 
