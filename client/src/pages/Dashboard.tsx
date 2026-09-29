@@ -129,10 +129,13 @@ export default function Dashboard() {
   const defaultLocations: Location[] = [
     { id: 1, name: "Storage Room A", shortCode: "SRA-01", warehouseId: 1, suppliedTo: "Retail Store North", suppliedUnits: 150, status: "In Transit" },
     { id: 2, name: "Cold Storage B", shortCode: "CSB-02", warehouseId: 2, suppliedTo: "Wholesale Partner X", suppliedUnits: 500, status: "Delivered" },
+    { id: 3, name: "Tech Hub C", shortCode: "THC-03", warehouseId: 3, suppliedTo: "IT Corp Headquarters", suppliedUnits: 320, status: "Pending" },
+    { id: 4, name: "Fulfillment Center D", shortCode: "FCD-04", warehouseId: 4, suppliedTo: "Ecommerce Hub South", suppliedUnits: 850, status: "Dispatched" },
+    { id: 5, name: "Distribution Point E", shortCode: "DPE-05", warehouseId: 5, suppliedTo: "Local Supermarkets", suppliedUnits: 1200, status: "In Transit" }
   ];
 
   const [locations, setLocations] = useState<Location[]>(() => {
-    const saved = localStorage.getItem("stockSenseLocations");
+    const saved = localStorage.getItem("stockSenseLocations_v2");
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -587,7 +590,7 @@ export default function Dashboard() {
                           if (newLocation.name && newLocation.shortCode && newLocation.warehouseId && newLocation.suppliedTo) {
                             const updatedLocations = [...locations, { id: Date.now(), ...newLocation }];
                             setLocations(updatedLocations);
-                            localStorage.setItem("stockSenseLocations", JSON.stringify(updatedLocations));
+                            localStorage.setItem("stockSenseLocations_v2", JSON.stringify(updatedLocations));
                             setNewLocation({ name: "", shortCode: "", warehouseId: 0, suppliedTo: "", suppliedUnits: 0, status: "Pending" as ProductStatus });
                             setIsAddingLocation(false);
                           }
@@ -641,7 +644,7 @@ export default function Dashboard() {
                               <div key={statusStep} className="flex gap-4 relative cursor-pointer group" onClick={() => {
                                 const updatedLocations = locations.map(l => l.id === loc.id ? { ...l, status: statusStep } : l);
                                 setLocations(updatedLocations);
-                                localStorage.setItem("stockSenseLocations", JSON.stringify(updatedLocations));
+                                localStorage.setItem("stockSenseLocations_v2", JSON.stringify(updatedLocations));
                               }}>
                                 {/* Vertical line for all except last */}
                                 {index < arr.length - 1 && (
