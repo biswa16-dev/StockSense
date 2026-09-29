@@ -78,12 +78,16 @@ export default function Dashboard() {
     name: string;
     shortCode: string;
     address: string;
+    image?: string;
   }
 
   const defaultWarehouses: Warehouse[] = [
     { id: 1, name: "Delhi GTB", shortCode: "gtb1708", address: "GTB nagar new delhi" },
     { id: 2, name: "Jalandhar Central", shortCode: "jal01", address: "Central City, Jalandhar" },
-    { id: 3, name: "Bangalore Tech Park", shortCode: "blr99", address: "Tech Park, Bangalore" }
+    { id: 3, name: "Bangalore Tech Park", shortCode: "blr99", address: "Tech Park, Bangalore" },
+    { id: 4, name: "Mumbai Central", shortCode: "bom01", address: "Andheri East, Mumbai", image: "/mumbai_warehouse.jpg" },
+    { id: 5, name: "Chennai Hub", shortCode: "maa44", address: "Guindy Industrial Estate, Chennai", image: "/chennai_warehouse.jpg" },
+    { id: 6, name: "Kolkata Port", shortCode: "ccu12", address: "Kidderpore, Kolkata", image: "/kolkata_warehouse.jpg" }
   ];
 
   const [warehouses, setWarehouses] = useState<Warehouse[]>(() => {
@@ -444,18 +448,25 @@ export default function Dashboard() {
               {/* Form Content / Warehouse List */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {warehouses.map(wh => (
-                  <div key={wh.id} className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[2rem] p-8 flex flex-col gap-6 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-4">
-                      <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Name:</label>
-                      <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{wh.name}</div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Short Code:</label>
-                      <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{wh.shortCode}</div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Address:</label>
-                      <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{wh.address}</div>
+                  <div key={wh.id} className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-[2rem] overflow-hidden flex flex-col shadow-sm hover:shadow-md transition-shadow">
+                    {wh.image && (
+                      <div className="w-full h-48 overflow-hidden">
+                        <img src={wh.image} alt={wh.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    )}
+                    <div className="p-8 flex flex-col gap-6">
+                      <div className="flex items-center gap-4">
+                        <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Name:</label>
+                        <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{wh.name}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Short Code:</label>
+                        <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{wh.shortCode}</div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <label className="w-24 text-sm font-medium text-[rgba(30,50,90,0.8)] text-right">Address:</label>
+                        <div className="flex-1 px-4 py-2 rounded-xl bg-white/40 text-sm text-[rgba(30,50,90,0.9)]">{wh.address}</div>
+                      </div>
                     </div>
                   </div>
                 ))}
