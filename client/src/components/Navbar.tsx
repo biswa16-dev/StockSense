@@ -1,19 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, User } from "lucide-react";
 
 export default function Navbar() {
-  const [userName, setUserName] = useState("");
-
-  useEffect(() => {
+  const [userName] = useState(() => {
     const user = localStorage.getItem("stockSenseUser");
     if (user) {
       try {
-        setUserName(JSON.parse(user).name);
-      } catch (e) {}
+        return JSON.parse(user).name;
+      } catch {}
     }
-  }, []);
+    return "";
+  });
 
   return (
     <nav className="flex items-center justify-between py-6 px-6 md:px-10 w-full relative z-10">

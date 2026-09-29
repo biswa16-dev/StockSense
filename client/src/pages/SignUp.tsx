@@ -82,7 +82,7 @@ export default function SignUp() {
         setIsLoading(false);
         localStorage.setItem("stockSenseUser", JSON.stringify({ name: userInfo.name || "Google User" }));
         navigate("/dashboard");
-      } catch (err) {
+      } catch {
         setIsLoading(false);
         setErrorMsg("Failed to fetch Google user profile.");
       }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Sidebar from "../components/Sidebar";
 import { PackageSearch, AlertTriangle, Truck, ArrowDownToLine, ArrowRightLeft, Search, Filter, Plus, Settings, ArrowDown, ArrowUp, RefreshCw, FileText, Download, Activity, Clock, Trash2 } from "lucide-react";
@@ -62,7 +62,17 @@ const initialTransactions = [
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [userName, setUserName] = useState("Demo User");
+  const [userName] = useState(() => {
+    const user = localStorage.getItem("stockSenseUser");
+    if (user) {
+      try {
+        return JSON.parse(user).name;
+      } catch {
+        console.error("Failed to parse user");
+      }
+    }
+    return "Demo User";
+  });
 
   const [dashboardSearch, setDashboardSearch] = useState("");
   const [dashboardFilter, setDashboardFilter] = useState("All Types");
@@ -82,9 +92,9 @@ export default function Dashboard() {
   }
 
   const defaultWarehouses: Warehouse[] = [
-    { id: 1, name: "Delhi GTB", shortCode: "gtb1708", address: "GTB nagar new delhi" },
-    { id: 2, name: "Jalandhar Central", shortCode: "jal01", address: "Central City, Jalandhar" },
-    { id: 3, name: "Bangalore Tech Park", shortCode: "blr99", address: "Tech Park, Bangalore" },
+    { id: 1, name: "Delhi GTB", shortCode: "gtb1708", address: "GTB nagar new delhi", image: "/delhi_warehouse.jpg" },
+    { id: 2, name: "Jalandhar Central", shortCode: "jal01", address: "Central City, Jalandhar", image: "/jalandhar_warehouse.jpg" },
+    { id: 3, name: "Bangalore Tech Park", shortCode: "blr99", address: "Tech Park, Bangalore", image: "/bangalore_warehouse.jpg" },
     { id: 4, name: "Mumbai Central", shortCode: "bom01", address: "Andheri East, Mumbai", image: "/mumbai_warehouse.jpg" },
     { id: 5, name: "Chennai Hub", shortCode: "maa44", address: "Guindy Industrial Estate, Chennai", image: "/chennai_warehouse.jpg" },
     { id: 6, name: "Kolkata Port", shortCode: "ccu12", address: "Kidderpore, Kolkata", image: "/kolkata_warehouse.jpg" }
@@ -95,25 +105,16 @@ export default function Dashboard() {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
         console.error("Failed to parse warehouses");
       }
     }
     return defaultWarehouses;
   });
   const [isAddingWarehouse, setIsAddingWarehouse] = useState(false);
-  const [newWarehouse, setNewWarehouse] = useState({ name: "", shortCode: "", address: "" });
+  const [newWarehouse, setNewWarehouse] = useState({ name: "", shortCode: "", address: "", image: "" });
 
-  useEffect(() => {
-    const user = localStorage.getItem("stockSenseUser");
-    if (user) {
-      try {
-        setUserName(JSON.parse(user).name);
-      } catch (e) {
-        console.error("Failed to parse user");
-      }
-    }
-  }, []);
+
 
   const { settings, loading, saving, hasUnsavedChanges, exchangeRates, updateSection, save, reset } = useSettings();
 
@@ -130,7 +131,7 @@ export default function Dashboard() {
         style: 'currency',
         currency: targetCurrency,
       }).format(convertedValue);
-    } catch (e) {
+    } catch {
       return `${targetCurrency} ${convertedValue.toFixed(2)}`;
     }
   };
@@ -168,7 +169,7 @@ export default function Dashboard() {
 
   const handleAddTransaction = (newTx: any) => {
     const txId = `TX-${1000 + transactions.length + 50}`;
-    const { qtyNum, ...txDataToSave } = newTx;
+    const { qtyNum: _qtyNum, ...txDataToSave } = newTx;
     
     setTransactions([{ ...txDataToSave, id: txId }, ...transactions]);
 
@@ -411,7 +412,7 @@ export default function Dashboard() {
                     className="bg-white/80 backdrop-blur-xl border border-white/50 rounded-[2rem] p-8 flex flex-col gap-6 shadow-sm overflow-hidden"
                   >
                     <h3 className="text-lg font-medium text-[rgba(30,50,90,0.9)]">Add New Warehouse</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-2">
                         <label htmlFor="warehouseName" className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Name:</label>
                         <input id="warehouseName" type="text" value={newWarehouse.name} onChange={e => setNewWarehouse({...newWarehouse, name: e.target.value})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)]" placeholder="e.g. Delhi GTB" />
@@ -424,15 +425,21 @@ export default function Dashboard() {
                         <label htmlFor="warehouseAddress" className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Address:</label>
                         <input id="warehouseAddress" type="text" value={newWarehouse.address} onChange={e => setNewWarehouse({...newWarehouse, address: e.target.value})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)]" placeholder="e.g. GTB nagar new delhi" />
                       </div>
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor="warehouseImage" className="text-sm font-medium text-[rgba(30,50,90,0.8)]">Image URL (Optional):</label>
+                        <input id="warehouseImage" type="text" value={newWarehouse.image} onChange={e => setNewWarehouse({...newWarehouse, image: e.target.value})} className="px-4 py-2 rounded-xl bg-white/50 border border-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] text-[rgba(30,50,90,0.8)] placeholder-[rgba(30,50,90,0.4)]" placeholder="e.g. https://example.com/img.jpg" />
+                      </div>
                     </div>
                     <div className="flex justify-end mt-2">
                       <button 
                         onClick={() => {
                           if (newWarehouse.name && newWarehouse.shortCode && newWarehouse.address) {
-                            const updatedWarehouses = [...warehouses, { id: Date.now(), ...newWarehouse }];
+                            const randomImages = ["/delhi_warehouse.jpg", "/jalandhar_warehouse.jpg", "/bangalore_warehouse.jpg", "/mumbai_warehouse.jpg", "/chennai_warehouse.jpg", "/kolkata_warehouse.jpg"];
+                            const finalImage = newWarehouse.image || randomImages[Math.floor(Math.random() * randomImages.length)];
+                            const updatedWarehouses = [...warehouses, { id: Date.now(), ...newWarehouse, image: finalImage }];
                             setWarehouses(updatedWarehouses);
                             localStorage.setItem("stockSenseWarehouses", JSON.stringify(updatedWarehouses));
-                            setNewWarehouse({ name: "", shortCode: "", address: "" });
+                            setNewWarehouse({ name: "", shortCode: "", address: "", image: "" });
                             setIsAddingWarehouse(false);
                           }
                         }}

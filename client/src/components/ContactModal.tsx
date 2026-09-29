@@ -41,7 +41,7 @@ export default function ContactModal({ isOpen, onClose }: ContactModalProps) {
         setStatus("Failed to send. Please try again.");
         setIsSubmitting(false);
       }
-    } catch (error) {
+    } catch {
       setStatus("Something went wrong!");
       setIsSubmitting(false);
     }
