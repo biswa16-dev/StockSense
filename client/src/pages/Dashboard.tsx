@@ -60,6 +60,101 @@ const initialTransactions = [
   { id: "TX-1038", type: "OUTBOUND", date: "Sep 24, 14:00 PM", sku: "FURN-TBL-02", qty: "-1", user: "Jane Smith", status: "Pending" },
 ];
 
+export type ProductStatus = "Pending" | "Dispatched" | "In Transit" | "Delivered";
+
+export interface Location {
+  id: number;
+  name: string;
+  shortCode: string;
+  warehouseId: number;
+  suppliedTo: string;
+  suppliedUnits: number;
+  status: ProductStatus;
+}
+
+const StatusTrackingFlow = ({ loc, locations, setLocations }: { loc: Location, locations: Location[], setLocations: any }) => {
+  const [playCount, setPlayCount] = useState(0);
+
+  return (
+    <div 
+      className="mt-2 pt-6 border-t border-[rgba(30,50,90,0.1)] group"
+      onMouseEnter={() => setPlayCount(c => c + 1)}
+    >
+      <label className="text-sm font-medium text-[rgba(30,50,90,0.8)] mb-6 block text-center">Supply Status Tracking</label>
+      <motion.div 
+        key={playCount} // forces re-render of animation on hover
+        className="flex flex-col gap-0 pl-12 md:pl-20"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
+      >
+        {(["Pending", "Dispatched", "In Transit", "Delivered"] as ProductStatus[]).map((statusStep, index, arr) => {
+          const currentStatus = loc.status || "Pending";
+          const isActive = currentStatus === statusStep;
+          const isPast = arr.indexOf(statusStep) <= arr.indexOf(currentStatus);
+          
+          return (
+            <motion.div 
+              key={statusStep} 
+              className="flex gap-4 relative cursor-pointer group/item" 
+              onClick={() => {
+                const updatedLocations = locations.map(l => l.id === loc.id ? { ...l, status: statusStep } : l);
+                setLocations(updatedLocations);
+                localStorage.setItem("stockSenseLocations_v2", JSON.stringify(updatedLocations));
+              }}
+              variants={{
+                hidden: {},
+                visible: {}
+              }}
+            >
+              {/* Vertical line for all except last */}
+              {index < arr.length - 1 && (
+                <div className={`absolute left-2.5 top-6 bottom-0 w-[2px] -ml-[1px] bg-[rgba(30,50,90,0.1)] group-hover/item:bg-[rgba(30,50,90,0.3)] transition-colors overflow-hidden`}>
+                   {arr.indexOf(statusStep) < arr.indexOf(currentStatus) && (
+                     <motion.div 
+                       className="w-full bg-[rgba(30,50,90,0.8)] origin-top"
+                       variants={{
+                         hidden: { scaleY: 0 },
+                         visible: { scaleY: 1, transition: { duration: 0.4, ease: "easeInOut" } }
+                       }}
+                     />
+                   )}
+                </div>
+              )}
+              {/* Circle marker */}
+              <div className="relative z-10 flex-shrink-0 mt-1">
+                <motion.div 
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center bg-white transition-colors ${isPast ? "border-[rgba(30,50,90,0.8)]" : "border-[rgba(30,50,90,0.2)] group-hover/item:border-[rgba(30,50,90,0.5)]"}`}
+                  variants={{
+                    hidden: { borderColor: "rgba(30,50,90,0.2)" },
+                    visible: { borderColor: isPast ? "rgba(30,50,90,0.8)" : "rgba(30,50,90,0.2)", transition: { duration: 0.4 } }
+                  }}
+                >
+                  {isPast && (
+                    <motion.div 
+                      className="w-2.5 h-2.5 rounded-full bg-[rgba(30,50,90,0.8)]"
+                      variants={{
+                        hidden: { scale: 0 },
+                        visible: { scale: 1, transition: { type: "spring", stiffness: 300, damping: 20 } }
+                      }}
+                    />
+                  )}
+                </motion.div>
+              </div>
+              {/* Text */}
+              <div 
+                className={`pb-6 text-sm transition-colors ${isActive ? "font-semibold text-[rgba(30,50,90,0.9)]" : isPast ? "font-medium text-[rgba(30,50,90,0.6)]" : "font-normal text-[rgba(30,50,90,0.4)] group-hover/item:text-[rgba(30,50,90,0.6)]"}`}
+              >
+                {statusStep}
+              </div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [userName] = useState(() => {
@@ -113,18 +208,6 @@ export default function Dashboard() {
   });
   const [isAddingWarehouse, setIsAddingWarehouse] = useState(false);
   const [newWarehouse, setNewWarehouse] = useState({ name: "", shortCode: "", address: "", image: "" });
-
-  type ProductStatus = "Pending" | "Dispatched" | "In Transit" | "Delivered";
-
-  interface Location {
-    id: number;
-    name: string;
-    shortCode: string;
-    warehouseId: number;
-    suppliedTo: string;
-    suppliedUnits: number;
-    status: ProductStatus;
-  }
 
   const defaultLocations: Location[] = [
     { id: 1, name: "Storage Room A", shortCode: "SRA-01", warehouseId: 1, suppliedTo: "Retail Store North", suppliedUnits: 150, status: "In Transit" },
@@ -632,39 +715,7 @@ export default function Dashboard() {
                       </div>
 
                       {/* Vertical Status Flow */}
-                      <div className="mt-2 pt-6 border-t border-[rgba(30,50,90,0.1)]">
-                        <label className="text-sm font-medium text-[rgba(30,50,90,0.8)] mb-6 block text-center">Supply Status Tracking</label>
-                        <div className="flex flex-col gap-0 pl-12 md:pl-20">
-                          {(["Pending", "Dispatched", "In Transit", "Delivered"] as ProductStatus[]).map((statusStep, index, arr) => {
-                            // Ensure backward compatibility if status is undefined in local storage
-                            const currentStatus = loc.status || "Pending";
-                            const isActive = currentStatus === statusStep;
-                            const isPast = arr.indexOf(statusStep) <= arr.indexOf(currentStatus);
-                            return (
-                              <div key={statusStep} className="flex gap-4 relative cursor-pointer group" onClick={() => {
-                                const updatedLocations = locations.map(l => l.id === loc.id ? { ...l, status: statusStep } : l);
-                                setLocations(updatedLocations);
-                                localStorage.setItem("stockSenseLocations_v2", JSON.stringify(updatedLocations));
-                              }}>
-                                {/* Vertical line for all except last */}
-                                {index < arr.length - 1 && (
-                                  <div className={`absolute left-2.5 top-6 bottom-0 w-[2px] -ml-[1px] ${arr.indexOf(statusStep) < arr.indexOf(currentStatus) ? "bg-[rgba(30,50,90,0.8)]" : "bg-[rgba(30,50,90,0.1)] group-hover:bg-[rgba(30,50,90,0.3)] transition-colors"}`} />
-                                )}
-                                {/* Circle marker */}
-                                <div className="relative z-10 flex-shrink-0 mt-1">
-                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center bg-white transition-colors ${isPast ? "border-[rgba(30,50,90,0.8)]" : "border-[rgba(30,50,90,0.2)] group-hover:border-[rgba(30,50,90,0.5)]"}`}>
-                                    {isPast && <div className="w-2.5 h-2.5 rounded-full bg-[rgba(30,50,90,0.8)]" />}
-                                  </div>
-                                </div>
-                                {/* Text */}
-                                <div className={`pb-6 text-sm transition-colors ${isActive ? "font-semibold text-[rgba(30,50,90,0.9)]" : isPast ? "font-medium text-[rgba(30,50,90,0.6)]" : "font-normal text-[rgba(30,50,90,0.4)] group-hover:text-[rgba(30,50,90,0.6)]"}`}>
-                                  {statusStep}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+                      <StatusTrackingFlow loc={loc} locations={locations} setLocations={setLocations} />
                     </div>
                   );
                 })}
