@@ -820,6 +820,361 @@ const DeliveriesManager = ({ userName, products }: { userName: string, products:
   );
 };
 
+type TransferStatus = "Draft" | "Waiting" | "Ready" | "Done";
+interface TransferProduct {
+  sku: string;
+  name: string;
+  quantity: number;
+}
+interface Transfer {
+  id: string;
+  sourceLocation: string;
+  destinationLocation: string;
+  scheduleDate: string;
+  responsible: string;
+  status: TransferStatus;
+  products: TransferProduct[];
+}
+
+const TransfersManager = ({ userName, products }: { userName: string, products: any[] }) => {
+  const [transfers, setTransfers] = useState<Transfer[]>(() => {
+    const saved = localStorage.getItem("stockSenseTransfers_v2");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      {
+        id: "WH/INT/0005",
+        sourceLocation: "WH/Receiving",
+        destinationLocation: "WH/Stock",
+        scheduleDate: new Date().toISOString().split('T')[0],
+        responsible: userName,
+        status: "Draft",
+        products: [
+          { sku: "FURN-SOF-01", name: "Premium Leather Sofa", quantity: 2 }
+        ]
+      },
+      {
+        id: "WH/INT/0004",
+        sourceLocation: "WH/Stock",
+        destinationLocation: "WH/Quality Control",
+        scheduleDate: "2026-09-30",
+        responsible: "Jane Smith",
+        status: "Waiting",
+        products: [
+          { sku: "FURN-CHR-04", name: "Ergonomic Office Chair", quantity: 50 }
+        ]
+      },
+      {
+        id: "WH/INT/0003",
+        sourceLocation: "WH/Receiving",
+        destinationLocation: "WH/Stock",
+        scheduleDate: "2026-09-28",
+        responsible: userName,
+        status: "Ready",
+        products: [
+          { sku: "FURN-TBL-02", name: "Oak Dining Table", quantity: 1 }
+        ]
+      },
+      {
+        id: "WH/INT/0002",
+        sourceLocation: "WH/Stock",
+        destinationLocation: "WH/Dispatch",
+        scheduleDate: "2026-09-25",
+        responsible: "Jane Smith",
+        status: "Done",
+        products: [
+          { sku: "LIGH-FLR-07", name: "Tripod Shelf Floor Lamp", quantity: 4 }
+        ]
+      },
+      {
+        id: "WH/INT/0001",
+        sourceLocation: "WH/Quality Control",
+        destinationLocation: "WH/Stock",
+        scheduleDate: "2026-09-22",
+        responsible: userName,
+        status: "Done",
+        products: [
+          { sku: "FURN-BED-05", name: "King Size Bed Frame", quantity: 2 },
+          { sku: "FURN-DNC-06", name: "Modern Upholstered Dining Chair", quantity: 8 }
+        ]
+      }
+    ];
+  });
+  
+  const [expandedId, setExpandedId] = useState<string | null>("WH/INT/0005");
+
+  const saveTransfers = (newTransfers: Transfer[]) => {
+    setTransfers(newTransfers);
+    localStorage.setItem("stockSenseTransfers_v2", JSON.stringify(newTransfers));
+  };
+
+  const handleCreateNew = () => {
+    const newId = `WH/INT/${String(transfers.length + 1).padStart(4, '0')}`;
+    const newTransfer: Transfer = {
+      id: newId,
+      sourceLocation: "WH/Stock",
+      destinationLocation: "",
+      scheduleDate: new Date().toISOString().split('T')[0],
+      responsible: userName,
+      status: "Draft",
+      products: []
+    };
+    saveTransfers([newTransfer, ...transfers]);
+    setExpandedId(newId);
+  };
+
+  const updateTransfer = (id: string, updates: Partial<Transfer>) => {
+    saveTransfers(transfers.map(t => t.id === id ? { ...t, ...updates } : t));
+  };
+
+  const Breadcrumb = ({ status, transferStatus }: { status: TransferStatus, transferStatus: TransferStatus }) => {
+    const isActive = status === transferStatus;
+    const isDone = status === 'Done' && transferStatus === 'Done';
+    return (
+      <div className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${isActive ? (isDone ? 'bg-green-500 text-white' : 'bg-[rgba(30,50,90,0.8)] text-white') : 'text-[rgba(30,50,90,0.5)]'}`}>
+        {status}
+      </div>
+    );
+  };
+
+  const checkStockAndTransition = (transfer: Transfer) => {
+    const isOutOfStock = transfer.products.some(dp => {
+      const p = products.find(prod => prod.sku === dp.sku);
+      return !p || p.stock < dp.quantity;
+    });
+    updateTransfer(transfer.id, { status: isOutOfStock ? 'Waiting' : 'Ready' });
+  };
+
+  return (
+    <div className="flex flex-col gap-4 w-full">
+       <div className="flex justify-between items-center bg-white/40 backdrop-blur-xl border border-white/30 rounded-[2rem] p-6 shadow-sm">
+         <div>
+           <h3 className="text-lg font-normal text-[rgba(30,50,90,0.9)]">Internal Transfers</h3>
+           <p className="text-sm text-[rgba(30,50,90,0.6)]">Manage stock movements between internal locations.</p>
+         </div>
+         <button onClick={handleCreateNew} className="flex items-center gap-2 bg-[rgba(30,50,90,0.8)] hover:bg-[rgba(30,50,90,1)] text-white px-4 py-2 rounded-full transition-colors text-sm shadow-sm">
+           <Plus className="w-4 h-4" /> New Transfer
+         </button>
+       </div>
+       
+       <div className="flex flex-col gap-3">
+         {transfers.map(transfer => (
+           <div key={transfer.id} className="bg-white/50 backdrop-blur-xl border border-white/40 rounded-2xl overflow-hidden shadow-sm transition-all">
+             <button 
+               onClick={() => setExpandedId(expandedId === transfer.id ? null : transfer.id)}
+               className="w-full flex items-center justify-between p-5 hover:bg-white/60 transition-colors"
+             >
+               <div className="flex items-center gap-6">
+                 <span className="font-semibold text-[rgba(30,50,90,0.9)] w-28 text-left">{transfer.id}</span>
+                 <span className="text-sm text-[rgba(30,50,90,0.6)] w-48 text-left truncate">{transfer.sourceLocation} &rarr; {transfer.destinationLocation || "New Destination"}</span>
+                 <span className="text-sm text-[rgba(30,50,90,0.6)]">{transfer.scheduleDate}</span>
+               </div>
+               <div className="flex items-center gap-4">
+                 <span className={`px-3 py-1 rounded-md text-xs font-medium ${
+                   transfer.status === 'Done' ? 'bg-green-500/10 text-green-600' : 
+                   transfer.status === 'Ready' ? 'bg-blue-500/10 text-blue-600' :
+                   transfer.status === 'Waiting' ? 'bg-amber-500/10 text-amber-600' : 'bg-[rgba(30,50,90,0.1)] text-[rgba(30,50,90,0.6)]'
+                 }`}>
+                   {transfer.status}
+                 </span>
+                 {expandedId === transfer.id ? <ArrowUp className="w-4 h-4 text-[rgba(30,50,90,0.4)]" /> : <ArrowDown className="w-4 h-4 text-[rgba(30,50,90,0.4)]" />}
+               </div>
+             </button>
+             
+             <AnimatePresence>
+               {expandedId === transfer.id && (
+                 <motion.div 
+                   initial={{ height: 0, opacity: 0 }}
+                   animate={{ height: 'auto', opacity: 1 }}
+                   exit={{ height: 0, opacity: 0 }}
+                   className="border-t border-white/30 bg-white/20"
+                 >
+                   <div className="p-6 md:p-8 flex flex-col gap-8">
+                     {/* Action bar */}
+                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                       <div className="flex flex-wrap items-center gap-3">
+                         {transfer.status === 'Draft' && (
+                           <button onClick={() => checkStockAndTransition(transfer)} className="px-5 py-2 bg-[rgba(30,50,90,0.8)] text-white rounded-md text-sm font-medium hover:bg-[rgba(30,50,90,1)] transition-colors shadow-sm">
+                             VALIDATE STOCK
+                           </button>
+                         )}
+                         {transfer.status === 'Waiting' && (
+                           <button onClick={() => checkStockAndTransition(transfer)} className="px-5 py-2 bg-amber-500/80 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors shadow-sm">
+                             CHECK AVAILABILITY
+                           </button>
+                         )}
+                         {transfer.status === 'Ready' && (
+                           <button onClick={() => updateTransfer(transfer.id, { status: 'Done' })} className="px-5 py-2 bg-[rgba(30,50,90,0.8)] text-white rounded-md text-sm font-medium hover:bg-[rgba(30,50,90,1)] transition-colors shadow-sm">
+                             VALIDATE TRANSFER
+                           </button>
+                         )}
+                         {transfer.status === 'Done' && (
+                           <button onClick={() => window.print()} className="px-5 py-2 bg-white/60 border border-white/60 text-[rgba(30,50,90,0.8)] rounded-md text-sm font-medium hover:bg-white/80 transition-colors shadow-sm">
+                             PRINT
+                           </button>
+                         )}
+                         <button onClick={() => setExpandedId(null)} className="px-5 py-2 bg-white/40 border border-white/40 text-[rgba(30,50,90,0.8)] rounded-md text-sm font-medium hover:bg-white/60 transition-colors shadow-sm">
+                           CANCEL
+                         </button>
+                       </div>
+                       
+                       <div className="flex items-center bg-white/40 rounded-full p-1 overflow-hidden shadow-sm">
+                         <Breadcrumb status="Draft" transferStatus={transfer.status} />
+                         <span className="text-[rgba(30,50,90,0.3)] mx-1 text-xs">&gt;</span>
+                         <Breadcrumb status="Waiting" transferStatus={transfer.status} />
+                         <span className="text-[rgba(30,50,90,0.3)] mx-1 text-xs">&gt;</span>
+                         <Breadcrumb status="Ready" transferStatus={transfer.status} />
+                         <span className="text-[rgba(30,50,90,0.3)] mx-1 text-xs">&gt;</span>
+                         <Breadcrumb status="Done" transferStatus={transfer.status} />
+                       </div>
+                     </div>
+                     
+                     {/* Fields */}
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                       <div className="flex flex-col gap-6">
+                         <h4 className="text-xl font-medium text-[rgba(30,50,90,0.9)]">{transfer.id}</h4>
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Source Location</label>
+                           <select 
+                             value={transfer.sourceLocation}
+                             onChange={(e) => updateTransfer(transfer.id, { sourceLocation: e.target.value })}
+                             disabled={transfer.status !== 'Draft'}
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.2)] focus:border-[rgba(30,50,90,0.6)] py-1.5 text-[rgba(30,50,90,0.9)] outline-none disabled:opacity-70 transition-colors appearance-none"
+                           >
+                             <option value="WH/Stock">WH/Stock</option>
+                             <option value="WH/Receiving">WH/Receiving</option>
+                             <option value="WH/Quality Control">WH/Quality Control</option>
+                             <option value="WH/Dispatch">WH/Dispatch</option>
+                           </select>
+                         </div>
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Destination Location</label>
+                           <select 
+                             value={transfer.destinationLocation}
+                             onChange={(e) => updateTransfer(transfer.id, { destinationLocation: e.target.value })}
+                             disabled={transfer.status !== 'Draft'}
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.2)] focus:border-[rgba(30,50,90,0.6)] py-1.5 text-[rgba(30,50,90,0.9)] outline-none disabled:opacity-70 transition-colors appearance-none"
+                           >
+                             <option value="">Select Location</option>
+                             <option value="WH/Stock">WH/Stock</option>
+                             <option value="WH/Receiving">WH/Receiving</option>
+                             <option value="WH/Quality Control">WH/Quality Control</option>
+                             <option value="WH/Dispatch">WH/Dispatch</option>
+                           </select>
+                         </div>
+                       </div>
+                       <div className="flex flex-col gap-6 pt-12 md:pt-14">
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Schedule Date</label>
+                           <input 
+                             type="date" 
+                             value={transfer.scheduleDate}
+                             onChange={(e) => updateTransfer(transfer.id, { scheduleDate: e.target.value })}
+                             disabled={transfer.status !== 'Draft'}
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.2)] focus:border-[rgba(30,50,90,0.6)] py-1.5 text-[rgba(30,50,90,0.9)] outline-none disabled:opacity-70 transition-colors"
+                           />
+                         </div>
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Responsible</label>
+                           <input 
+                             type="text" 
+                             value={transfer.responsible}
+                             disabled
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.1)] py-1.5 text-[rgba(30,50,90,0.6)] outline-none"
+                           />
+                         </div>
+                       </div>
+                     </div>
+                     
+                     {/* Products */}
+                     <div className="mt-4 border border-white/40 rounded-xl overflow-hidden bg-white/40 shadow-sm">
+                       <div className="px-5 py-3 bg-white/50 border-b border-white/40 font-medium text-sm text-[rgba(30,50,90,0.8)]">Products</div>
+                       <table className="w-full text-left">
+                         <thead>
+                           <tr className="border-b border-white/20">
+                             <th className="py-3 px-5 text-xs font-semibold text-[rgba(30,50,90,0.6)] uppercase tracking-wider">Product</th>
+                             <th className="py-3 px-5 text-xs font-semibold text-[rgba(30,50,90,0.6)] uppercase tracking-wider text-right w-32">Quantity</th>
+                             {transfer.status === 'Draft' && <th className="py-3 px-5 w-12"></th>}
+                           </tr>
+                         </thead>
+                         <tbody>
+                           {transfer.products.map((dp, i) => {
+                             const p = products.find(prod => prod.sku === dp.sku);
+                             const outOfStock = !p || p.stock < dp.quantity;
+                             return (
+                               <tr key={i} className={`border-b border-white/10 last:border-0 group ${outOfStock ? 'bg-red-500/10' : ''}`}>
+                                 <td className="py-3 px-5 text-sm font-medium relative">
+                                   <span className={outOfStock ? 'text-red-600' : 'text-[rgba(30,50,90,0.8)]'}>[{dp.sku}] {dp.name}</span>
+                                   {outOfStock && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded uppercase font-bold tracking-wider relative -top-0.5">Out of Stock ({p ? p.stock : 0} available)</span>}
+                                 </td>
+                                 <td className="py-3 px-5 text-right">
+                                   <input 
+                                     type="number" 
+                                     min="1"
+                                     value={dp.quantity}
+                                     disabled={transfer.status !== 'Draft'}
+                                     onChange={(e) => {
+                                       const newProducts = [...transfer.products];
+                                       newProducts[i].quantity = parseInt(e.target.value) || 0;
+                                       updateTransfer(transfer.id, { products: newProducts });
+                                     }}
+                                     className={`w-16 bg-white/50 border rounded px-2 py-1 text-right text-sm outline-none focus:ring-2 disabled:opacity-70 disabled:bg-transparent disabled:border-transparent transition-all ${
+                                       outOfStock ? 'border-red-400 text-red-600 focus:ring-red-200' : 'border-white/60 text-[rgba(30,50,90,0.9)] focus:ring-[rgba(30,50,90,0.2)]'
+                                     }`}
+                                   />
+                                 </td>
+                                 {transfer.status === 'Draft' && (
+                                   <td className="py-3 px-5 text-right">
+                                     <button onClick={() => {
+                                       const newProducts = [...transfer.products];
+                                       newProducts.splice(i, 1);
+                                       updateTransfer(transfer.id, { products: newProducts });
+                                     }} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded">
+                                       <Trash2 className="w-4 h-4" />
+                                     </button>
+                                   </td>
+                                 )}
+                               </tr>
+                             );
+                           })}
+                           {transfer.products.length === 0 && (
+                             <tr>
+                               <td colSpan={transfer.status === 'Draft' ? 3 : 2} className="py-6 text-center text-sm text-[rgba(30,50,90,0.5)] italic">No products added yet.</td>
+                             </tr>
+                           )}
+                           {transfer.status === 'Draft' && (
+                             <tr className="bg-white/20 hover:bg-white/30 transition-colors cursor-pointer" onClick={() => {
+                                const existingSkus = transfer.products.map(p => p.sku);
+                                const availableProduct = products.find(p => !existingSkus.includes(p.sku)) || products[0];
+                                if (availableProduct) {
+                                  updateTransfer(transfer.id, { 
+                                    products: [...transfer.products, { sku: availableProduct.sku, name: availableProduct.name, quantity: 1 }] 
+                                  });
+                                }
+                             }}>
+                               <td colSpan={3} className="py-3 px-5">
+                                 <div className="text-sm text-[rgba(30,50,90,0.7)] hover:text-[rgba(30,50,90,1)] font-medium flex items-center gap-1.5 transition-colors">
+                                   <Plus className="w-4 h-4" /> Add Product Line
+                                 </div>
+                               </td>
+                             </tr>
+                           )}
+                         </tbody>
+                       </table>
+                     </div>
+                     
+                   </div>
+                 </motion.div>
+               )}
+             </AnimatePresence>
+           </div>
+         ))}
+       </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [userName] = useState(() => {
@@ -1040,6 +1395,8 @@ export default function Dashboard() {
                 <ReceiptsManager userName={userName} products={products} />
               ) : dashboardFilter === "Deliveries" ? (
                 <DeliveriesManager userName={userName} products={products} />
+              ) : dashboardFilter === "Internal Transfers" ? (
+                <TransfersManager userName={userName} products={products} />
               ) : (
                 <div className="flex-1 w-full bg-white/40 backdrop-blur-xl border border-white/30 rounded-[2rem] p-6 overflow-hidden flex flex-col">
                   <div className="flex items-center justify-between mb-4">
