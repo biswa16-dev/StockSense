@@ -470,6 +470,356 @@ const ReceiptsManager = ({ userName, products }: { userName: string, products: a
   );
 };
 
+type DeliveryStatus = "Draft" | "Waiting" | "Ready" | "Done";
+interface DeliveryProduct {
+  sku: string;
+  name: string;
+  quantity: number;
+}
+interface Delivery {
+  id: string;
+  deliveryAddress: string;
+  scheduleDate: string;
+  responsible: string;
+  operationType: string;
+  status: DeliveryStatus;
+  products: DeliveryProduct[];
+}
+
+const DeliveriesManager = ({ userName, products }: { userName: string, products: any[] }) => {
+  const [deliveries, setDeliveries] = useState<Delivery[]>(() => {
+    const saved = localStorage.getItem("stockSenseDeliveries_v2");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      {
+        id: "WH/OUT/0005",
+        deliveryAddress: "Customer X, NY",
+        scheduleDate: new Date().toISOString().split('T')[0],
+        responsible: userName,
+        operationType: "Delivery Orders",
+        status: "Draft",
+        products: [
+          { sku: "FURN-SOF-01", name: "Premium Leather Sofa", quantity: 2 }
+        ]
+      },
+      {
+        id: "WH/OUT/0004",
+        deliveryAddress: "Design Studios, LA",
+        scheduleDate: "2026-09-30",
+        responsible: "Jane Smith",
+        operationType: "Dropship",
+        status: "Waiting",
+        products: [
+          { sku: "FURN-CHR-04", name: "Ergonomic Office Chair", quantity: 50 } // Will probably be out of stock
+        ]
+      },
+      {
+        id: "WH/OUT/0003",
+        deliveryAddress: "Retailer Z, Chicago",
+        scheduleDate: "2026-09-28",
+        responsible: userName,
+        operationType: "Delivery Orders",
+        status: "Ready",
+        products: [
+          { sku: "FURN-TBL-02", name: "Oak Dining Table", quantity: 1 }
+        ]
+      },
+      {
+        id: "WH/OUT/0002",
+        deliveryAddress: "Interior Decorators, MIA",
+        scheduleDate: "2026-09-25",
+        responsible: "Jane Smith",
+        operationType: "Delivery Orders",
+        status: "Done",
+        products: [
+          { sku: "LIGH-FLR-07", name: "Tripod Shelf Floor Lamp", quantity: 4 }
+        ]
+      },
+      {
+        id: "WH/OUT/0001",
+        deliveryAddress: "Home Furniture Co.",
+        scheduleDate: "2026-09-22",
+        responsible: userName,
+        operationType: "Delivery Orders",
+        status: "Done",
+        products: [
+          { sku: "FURN-BED-05", name: "King Size Bed Frame", quantity: 2 },
+          { sku: "FURN-DNC-06", name: "Modern Upholstered Dining Chair", quantity: 8 }
+        ]
+      }
+    ];
+  });
+  
+  const [expandedId, setExpandedId] = useState<string | null>("WH/OUT/0001");
+
+  const saveDeliveries = (newDeliveries: Delivery[]) => {
+    setDeliveries(newDeliveries);
+    localStorage.setItem("stockSenseDeliveries_v2", JSON.stringify(newDeliveries));
+  };
+
+  const handleCreateNew = () => {
+    const newId = `WH/OUT/${String(deliveries.length + 1).padStart(4, '0')}`;
+    const newDelivery: Delivery = {
+      id: newId,
+      deliveryAddress: "",
+      scheduleDate: new Date().toISOString().split('T')[0],
+      responsible: userName,
+      operationType: "Delivery Orders",
+      status: "Draft",
+      products: []
+    };
+    saveDeliveries([newDelivery, ...deliveries]);
+    setExpandedId(newId);
+  };
+
+  const updateDelivery = (id: string, updates: Partial<Delivery>) => {
+    saveDeliveries(deliveries.map(d => d.id === id ? { ...d, ...updates } : d));
+  };
+
+  const Breadcrumb = ({ status, deliveryStatus }: { status: DeliveryStatus, deliveryStatus: DeliveryStatus }) => {
+    const isActive = status === deliveryStatus;
+    const isDone = status === 'Done' && deliveryStatus === 'Done';
+    return (
+      <div className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${isActive ? (isDone ? 'bg-green-500 text-white' : 'bg-[rgba(30,50,90,0.8)] text-white') : 'text-[rgba(30,50,90,0.5)]'}`}>
+        {status}
+      </div>
+    );
+  };
+
+  const checkStockAndTransition = (delivery: Delivery) => {
+    const isOutOfStock = delivery.products.some(dp => {
+      const p = products.find(prod => prod.sku === dp.sku);
+      return !p || p.stock < dp.quantity;
+    });
+    updateDelivery(delivery.id, { status: isOutOfStock ? 'Waiting' : 'Ready' });
+  };
+
+  return (
+    <div className="flex flex-col gap-4 w-full">
+       <div className="flex justify-between items-center bg-white/40 backdrop-blur-xl border border-white/30 rounded-[2rem] p-6 shadow-sm">
+         <div>
+           <h3 className="text-lg font-normal text-[rgba(30,50,90,0.9)]">Deliveries Management</h3>
+           <p className="text-sm text-[rgba(30,50,90,0.6)]">Manage outbound inventory deliveries.</p>
+         </div>
+         <button onClick={handleCreateNew} className="flex items-center gap-2 bg-[rgba(30,50,90,0.8)] hover:bg-[rgba(30,50,90,1)] text-white px-4 py-2 rounded-full transition-colors text-sm shadow-sm">
+           <Plus className="w-4 h-4" /> New Delivery
+         </button>
+       </div>
+       
+       <div className="flex flex-col gap-3">
+         {deliveries.map(delivery => (
+           <div key={delivery.id} className="bg-white/50 backdrop-blur-xl border border-white/40 rounded-2xl overflow-hidden shadow-sm transition-all">
+             <button 
+               onClick={() => setExpandedId(expandedId === delivery.id ? null : delivery.id)}
+               className="w-full flex items-center justify-between p-5 hover:bg-white/60 transition-colors"
+             >
+               <div className="flex items-center gap-6">
+                 <span className="font-semibold text-[rgba(30,50,90,0.9)] w-28 text-left">{delivery.id}</span>
+                 <span className="text-sm text-[rgba(30,50,90,0.6)] w-32 text-left truncate">{delivery.deliveryAddress || "New Customer"}</span>
+                 <span className="text-sm text-[rgba(30,50,90,0.6)]">{delivery.scheduleDate}</span>
+               </div>
+               <div className="flex items-center gap-4">
+                 <span className={`px-3 py-1 rounded-md text-xs font-medium ${
+                   delivery.status === 'Done' ? 'bg-green-500/10 text-green-600' : 
+                   delivery.status === 'Ready' ? 'bg-blue-500/10 text-blue-600' :
+                   delivery.status === 'Waiting' ? 'bg-amber-500/10 text-amber-600' : 'bg-[rgba(30,50,90,0.1)] text-[rgba(30,50,90,0.6)]'
+                 }`}>
+                   {delivery.status}
+                 </span>
+                 {expandedId === delivery.id ? <ArrowUp className="w-4 h-4 text-[rgba(30,50,90,0.4)]" /> : <ArrowDown className="w-4 h-4 text-[rgba(30,50,90,0.4)]" />}
+               </div>
+             </button>
+             
+             <AnimatePresence>
+               {expandedId === delivery.id && (
+                 <motion.div 
+                   initial={{ height: 0, opacity: 0 }}
+                   animate={{ height: 'auto', opacity: 1 }}
+                   exit={{ height: 0, opacity: 0 }}
+                   className="border-t border-white/30 bg-white/20"
+                 >
+                   <div className="p-6 md:p-8 flex flex-col gap-8">
+                     {/* Action bar */}
+                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                       <div className="flex flex-wrap items-center gap-3">
+                         {delivery.status === 'Draft' && (
+                           <button onClick={() => checkStockAndTransition(delivery)} className="px-5 py-2 bg-[rgba(30,50,90,0.8)] text-white rounded-md text-sm font-medium hover:bg-[rgba(30,50,90,1)] transition-colors shadow-sm">
+                             VALIDATE STOCK
+                           </button>
+                         )}
+                         {delivery.status === 'Waiting' && (
+                           <button onClick={() => checkStockAndTransition(delivery)} className="px-5 py-2 bg-amber-500/80 text-white rounded-md text-sm font-medium hover:bg-amber-600 transition-colors shadow-sm">
+                             CHECK AVAILABILITY
+                           </button>
+                         )}
+                         {delivery.status === 'Ready' && (
+                           <button onClick={() => updateDelivery(delivery.id, { status: 'Done' })} className="px-5 py-2 bg-[rgba(30,50,90,0.8)] text-white rounded-md text-sm font-medium hover:bg-[rgba(30,50,90,1)] transition-colors shadow-sm">
+                             VALIDATE DELIVERY
+                           </button>
+                         )}
+                         {delivery.status === 'Done' && (
+                           <button onClick={() => window.print()} className="px-5 py-2 bg-white/60 border border-white/60 text-[rgba(30,50,90,0.8)] rounded-md text-sm font-medium hover:bg-white/80 transition-colors shadow-sm">
+                             PRINT
+                           </button>
+                         )}
+                         <button onClick={() => setExpandedId(null)} className="px-5 py-2 bg-white/40 border border-white/40 text-[rgba(30,50,90,0.8)] rounded-md text-sm font-medium hover:bg-white/60 transition-colors shadow-sm">
+                           CANCEL
+                         </button>
+                       </div>
+                       
+                       <div className="flex items-center bg-white/40 rounded-full p-1 overflow-hidden shadow-sm">
+                         <Breadcrumb status="Draft" deliveryStatus={delivery.status} />
+                         <span className="text-[rgba(30,50,90,0.3)] mx-1 text-xs">&gt;</span>
+                         <Breadcrumb status="Waiting" deliveryStatus={delivery.status} />
+                         <span className="text-[rgba(30,50,90,0.3)] mx-1 text-xs">&gt;</span>
+                         <Breadcrumb status="Ready" deliveryStatus={delivery.status} />
+                         <span className="text-[rgba(30,50,90,0.3)] mx-1 text-xs">&gt;</span>
+                         <Breadcrumb status="Done" deliveryStatus={delivery.status} />
+                       </div>
+                     </div>
+                     
+                     {/* Fields */}
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                       <div className="flex flex-col gap-6">
+                         <h4 className="text-xl font-medium text-[rgba(30,50,90,0.9)]">{delivery.id}</h4>
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Delivery Address</label>
+                           <input 
+                             type="text" 
+                             value={delivery.deliveryAddress}
+                             onChange={(e) => updateDelivery(delivery.id, { deliveryAddress: e.target.value })}
+                             disabled={delivery.status !== 'Draft'}
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.2)] focus:border-[rgba(30,50,90,0.6)] py-1.5 text-[rgba(30,50,90,0.9)] outline-none disabled:opacity-70 transition-colors"
+                             placeholder="e.g. Customer Address"
+                           />
+                         </div>
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Responsible</label>
+                           <input 
+                             type="text" 
+                             value={delivery.responsible}
+                             disabled
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.1)] py-1.5 text-[rgba(30,50,90,0.6)] outline-none"
+                           />
+                         </div>
+                       </div>
+                       <div className="flex flex-col gap-6 pt-12 md:pt-14">
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Schedule Date</label>
+                           <input 
+                             type="date" 
+                             value={delivery.scheduleDate}
+                             onChange={(e) => updateDelivery(delivery.id, { scheduleDate: e.target.value })}
+                             disabled={delivery.status !== 'Draft'}
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.2)] focus:border-[rgba(30,50,90,0.6)] py-1.5 text-[rgba(30,50,90,0.9)] outline-none disabled:opacity-70 transition-colors"
+                           />
+                         </div>
+                         <div>
+                           <label className="text-xs font-semibold text-[rgba(30,50,90,0.6)] mb-1 block uppercase tracking-wider">Operation Type</label>
+                           <select 
+                             value={delivery.operationType}
+                             onChange={(e) => updateDelivery(delivery.id, { operationType: e.target.value })}
+                             disabled={delivery.status !== 'Draft'}
+                             className="w-full bg-transparent border-b-2 border-[rgba(30,50,90,0.2)] focus:border-[rgba(30,50,90,0.6)] py-1.5 text-[rgba(30,50,90,0.9)] outline-none disabled:opacity-70 transition-colors appearance-none"
+                           >
+                             <option value="Delivery Orders">Delivery Orders</option>
+                             <option value="Dropship">Dropship</option>
+                             <option value="Returns">Returns</option>
+                           </select>
+                         </div>
+                       </div>
+                     </div>
+                     
+                     {/* Products */}
+                     <div className="mt-4 border border-white/40 rounded-xl overflow-hidden bg-white/40 shadow-sm">
+                       <div className="px-5 py-3 bg-white/50 border-b border-white/40 font-medium text-sm text-[rgba(30,50,90,0.8)]">Products</div>
+                       <table className="w-full text-left">
+                         <thead>
+                           <tr className="border-b border-white/20">
+                             <th className="py-3 px-5 text-xs font-semibold text-[rgba(30,50,90,0.6)] uppercase tracking-wider">Product</th>
+                             <th className="py-3 px-5 text-xs font-semibold text-[rgba(30,50,90,0.6)] uppercase tracking-wider text-right w-32">Quantity</th>
+                             {delivery.status === 'Draft' && <th className="py-3 px-5 w-12"></th>}
+                           </tr>
+                         </thead>
+                         <tbody>
+                           {delivery.products.map((dp, i) => {
+                             const p = products.find(prod => prod.sku === dp.sku);
+                             const outOfStock = !p || p.stock < dp.quantity;
+                             return (
+                               <tr key={i} className={`border-b border-white/10 last:border-0 group ${outOfStock ? 'bg-red-500/10' : ''}`}>
+                                 <td className="py-3 px-5 text-sm font-medium relative">
+                                   <span className={outOfStock ? 'text-red-600' : 'text-[rgba(30,50,90,0.8)]'}>[{dp.sku}] {dp.name}</span>
+                                   {outOfStock && <span className="ml-2 text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded uppercase font-bold tracking-wider relative -top-0.5">Out of Stock ({p ? p.stock : 0} available)</span>}
+                                 </td>
+                                 <td className="py-3 px-5 text-right">
+                                   <input 
+                                     type="number" 
+                                     min="1"
+                                     value={dp.quantity}
+                                     disabled={delivery.status !== 'Draft'}
+                                     onChange={(e) => {
+                                       const newProducts = [...delivery.products];
+                                       newProducts[i].quantity = parseInt(e.target.value) || 0;
+                                       updateDelivery(delivery.id, { products: newProducts });
+                                     }}
+                                     className={`w-16 bg-white/50 border rounded px-2 py-1 text-right text-sm outline-none focus:ring-2 disabled:opacity-70 disabled:bg-transparent disabled:border-transparent transition-all ${
+                                       outOfStock ? 'border-red-400 text-red-600 focus:ring-red-200' : 'border-white/60 text-[rgba(30,50,90,0.9)] focus:ring-[rgba(30,50,90,0.2)]'
+                                     }`}
+                                   />
+                                 </td>
+                                 {delivery.status === 'Draft' && (
+                                   <td className="py-3 px-5 text-right">
+                                     <button onClick={() => {
+                                       const newProducts = [...delivery.products];
+                                       newProducts.splice(i, 1);
+                                       updateDelivery(delivery.id, { products: newProducts });
+                                     }} className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-50 rounded">
+                                       <Trash2 className="w-4 h-4" />
+                                     </button>
+                                   </td>
+                                 )}
+                               </tr>
+                             );
+                           })}
+                           {delivery.products.length === 0 && (
+                             <tr>
+                               <td colSpan={delivery.status === 'Draft' ? 3 : 2} className="py-6 text-center text-sm text-[rgba(30,50,90,0.5)] italic">No products added yet.</td>
+                             </tr>
+                           )}
+                           {delivery.status === 'Draft' && (
+                             <tr className="bg-white/20 hover:bg-white/30 transition-colors cursor-pointer" onClick={() => {
+                                const existingSkus = delivery.products.map(p => p.sku);
+                                const availableProduct = products.find(p => !existingSkus.includes(p.sku)) || products[0];
+                                if (availableProduct) {
+                                  updateDelivery(delivery.id, { 
+                                    products: [...delivery.products, { sku: availableProduct.sku, name: availableProduct.name, quantity: 1 }] 
+                                  });
+                                }
+                             }}>
+                               <td colSpan={3} className="py-3 px-5">
+                                 <div className="text-sm text-[rgba(30,50,90,0.7)] hover:text-[rgba(30,50,90,1)] font-medium flex items-center gap-1.5 transition-colors">
+                                   <Plus className="w-4 h-4" /> Add Product Line
+                                 </div>
+                               </td>
+                             </tr>
+                           )}
+                         </tbody>
+                       </table>
+                     </div>
+                     
+                   </div>
+                 </motion.div>
+               )}
+             </AnimatePresence>
+           </div>
+         ))}
+       </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [userName] = useState(() => {
@@ -685,9 +1035,11 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Conditional Display: Receipts Manager or Current Inventory Table */}
+              {/* Conditional Display: Receipts Manager, Deliveries Manager, or Current Inventory Table */}
               {dashboardFilter === "Receipts" ? (
                 <ReceiptsManager userName={userName} products={products} />
+              ) : dashboardFilter === "Deliveries" ? (
+                <DeliveriesManager userName={userName} products={products} />
               ) : (
                 <div className="flex-1 w-full bg-white/40 backdrop-blur-xl border border-white/30 rounded-[2rem] p-6 overflow-hidden flex flex-col">
                   <div className="flex items-center justify-between mb-4">
