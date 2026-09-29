@@ -79,7 +79,7 @@ app.get('/api/dashboard', async (req, res) => {
   }
 });
 
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 app.post('/api/auth/register', async (req, res) => {
   try {
