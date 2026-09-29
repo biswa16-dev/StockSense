@@ -172,19 +172,70 @@ interface Receipt {
 
 const ReceiptsManager = ({ userName, products }: { userName: string, products: any[] }) => {
   const [receipts, setReceipts] = useState<Receipt[]>(() => {
-    const saved = localStorage.getItem("stockSenseReceipts");
+    const saved = localStorage.getItem("stockSenseReceipts_v2");
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
     return [
       {
-        id: "WH/IN/0001",
+        id: "WH/IN/0006",
         receiveFrom: "Vendor Alpha",
         scheduleDate: new Date().toISOString().split('T')[0],
         responsible: userName,
         status: "Draft",
         products: [
           { sku: "FURN-SOF-01", name: "Premium Leather Sofa", quantity: 6 }
+        ]
+      },
+      {
+        id: "WH/IN/0005",
+        receiveFrom: "Global Furnishings",
+        scheduleDate: "2026-09-30",
+        responsible: "Jane Smith",
+        status: "Ready",
+        products: [
+          { sku: "FURN-CHR-04", name: "Ergonomic Office Chair", quantity: 20 },
+          { sku: "FURN-TBL-02", name: "Oak Dining Table", quantity: 5 }
+        ]
+      },
+      {
+        id: "WH/IN/0004",
+        receiveFrom: "Lumina Lighting Co.",
+        scheduleDate: "2026-09-28",
+        responsible: userName,
+        status: "Done",
+        products: [
+          { sku: "LIGH-FLR-07", name: "Tripod Shelf Floor Lamp", quantity: 15 }
+        ]
+      },
+      {
+        id: "WH/IN/0003",
+        receiveFrom: "Home Essentials Inc",
+        scheduleDate: "2026-10-02",
+        responsible: "Admin",
+        status: "Draft",
+        products: [
+          { sku: "FURN-BED-05", name: "King Size Bed Frame", quantity: 4 }
+        ]
+      },
+      {
+        id: "WH/IN/0002",
+        receiveFrom: "Comfort Seating Ltd",
+        scheduleDate: "2026-09-27",
+        responsible: userName,
+        status: "Done",
+        products: [
+          { sku: "FURN-DNC-06", name: "Modern Upholstered Dining Chair", quantity: 24 }
+        ]
+      },
+      {
+        id: "WH/IN/0001",
+        receiveFrom: "Glassworks Studio",
+        scheduleDate: "2026-09-25",
+        responsible: "Jane Smith",
+        status: "Done",
+        products: [
+          { sku: "FURN-COF-03", name: "Glass Coffee Table", quantity: 2 }
         ]
       }
     ];
@@ -194,7 +245,7 @@ const ReceiptsManager = ({ userName, products }: { userName: string, products: a
 
   const saveReceipts = (newReceipts: Receipt[]) => {
     setReceipts(newReceipts);
-    localStorage.setItem("stockSenseReceipts", JSON.stringify(newReceipts));
+    localStorage.setItem("stockSenseReceipts_v2", JSON.stringify(newReceipts));
   };
 
   const handleCreateNew = () => {
