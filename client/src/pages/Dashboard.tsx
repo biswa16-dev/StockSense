@@ -112,7 +112,7 @@ const StatusTrackingFlow = ({ loc, locations, setLocations }: { loc: Location, l
                 <div className={`absolute left-2.5 top-6 bottom-0 w-[2px] -ml-[1px] bg-[rgba(30,50,90,0.1)] group-hover/item:bg-[rgba(30,50,90,0.3)] transition-colors overflow-hidden`}>
                    {arr.indexOf(statusStep) < arr.indexOf(currentStatus) && (
                      <motion.div 
-                       className="w-full bg-[rgba(30,50,90,0.8)] origin-top"
+                       className="w-full h-full bg-[rgba(30,50,90,0.8)] origin-top"
                        variants={{
                          hidden: { scaleY: 0 },
                          visible: { scaleY: 1, transition: { duration: 0.4, ease: "easeInOut" } }
