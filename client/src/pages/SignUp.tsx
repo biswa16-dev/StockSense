@@ -374,7 +374,7 @@ export default function SignUp() {
               </div>
               <div className="flex justify-between items-center mt-1">
                 <p className="text-[10px] text-[rgba(30,50,90,0.5)]">Requires at least 8 symbols.</p>
-                {isLogin && <span onClick={() => { setForgotPasswordStage(1); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-[rgba(30,50,90,1)] hover:underline font-medium cursor-pointer">Forgot Password?</span>}
+                <span onClick={() => { setForgotPasswordStage(1); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-[rgba(30,50,90,1)] hover:underline font-medium cursor-pointer">Forgot Password?</span>
               </div>
             </div>
 
