@@ -31,7 +31,7 @@ export default function SignUp() {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const finalName = `${firstName || "Demo"} ${lastName || "User"}`.trim();
+      const finalName = [firstName, lastName].filter(Boolean).join(" ") || "Demo User";
 
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
@@ -44,6 +44,15 @@ export default function SignUp() {
 
       if (!response.ok) {
         setErrorMsg(data.error || "Authentication failed");
+        return;
+      }
+
+      if (!isLogin) {
+        setSuccessMsg("Account created successfully! Please log in.");
+        setIsLogin(true);
+        setFirstName("");
+        setLastName("");
+        setPassword("");
         return;
       }
 
