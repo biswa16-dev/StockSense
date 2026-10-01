@@ -113,7 +113,7 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    if (!user) return res.status(404).json({ error: "Email not found. Please register first." });
     
     // Check if it's a Google user without a password
     if (user.passwordHash === 'GOOGLE_AUTH') {
@@ -149,8 +149,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const { email } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      // Return success even if user not found to prevent email enumeration
-      return res.json({ status: 'success' });
+      return res.status(404).json({ error: "Email not found. Please register first." });
     }
     
     // Generate 6-digit OTP
