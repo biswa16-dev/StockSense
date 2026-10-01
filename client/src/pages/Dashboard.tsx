@@ -845,7 +845,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     // If backend is deployed, replace this URL with the live Vercel URL
-    const API_URL = 'https://stock-sense-beryl.vercel.app';
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     fetch(`${API_URL}/api/dashboard`)
       .then(res => res.json())
       .then(data => {

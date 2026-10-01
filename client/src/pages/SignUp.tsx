@@ -29,7 +29,7 @@ export default function SignUp() {
     setIsLoading(true);
     
     try {
-      const API_URL = 'https://stock-sense-beryl.vercel.app';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const finalName = `${firstName || "Demo"} ${lastName || "User"}`.trim();
 
@@ -63,7 +63,7 @@ export default function SignUp() {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }).then(res => res.json());
         
-      const API_URL = 'https://stock-sense-beryl.vercel.app';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         const response = await fetch(`${API_URL}/api/auth/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

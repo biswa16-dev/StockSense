@@ -9,7 +9,7 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "postinstall": "prisma skills sync || exit 0",
+    "postinstall": "prisma generate",
     "contract:emit": "prisma contract emit"
   },
   "keywords": [],
