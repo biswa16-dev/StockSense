@@ -26,6 +26,11 @@ export default function SignUp() {
       return;
     }
 
+    if (!isLogin && password.length < 8) {
+      setErrorMsg("Password must be at least 8 characters long.");
+      return;
+    }
+
     setIsLoading(true);
     
     try {

@@ -95,6 +95,9 @@ app.post('/api/auth/register', async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ error: "Email already in use" });
     }
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters long." });
+    }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
       data: { email, passwordHash, name, role: 'USER' }
