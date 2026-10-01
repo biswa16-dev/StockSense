@@ -4,6 +4,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import { getExchangeRates } from './services/exchangeRateService';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -138,6 +139,90 @@ app.post('/api/auth/google', async (req, res) => {
       });
     }
     res.json({ status: 'success', user: { name: user.name, email: user.email } });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Return success even if user not found to prevent email enumeration
+      return res.json({ status: 'success' });
+    }
+    
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    await prisma.user.update({
+      where: { email },
+      data: { resetOtp: otp, resetOtpExpiry: expiry }
+    });
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASSWORD
+      }
+    });
+
+    await transporter.sendMail({
+      from: `"StockSense Support" <${process.env.SMTP_EMAIL}>`,
+      to: email,
+      subject: "Password Reset OTP",
+      text: `Your OTP for resetting your StockSense password is: ${otp}\n\nIt is valid for 10 minutes.`,
+      html: `<h3>StockSense Password Reset</h3><p>Your OTP is: <strong>${otp}</strong></p><p>It is valid for 10 minutes.</p>`
+    });
+
+    res.json({ status: 'success' });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to send reset email" });
+  }
+});
+
+app.post('/api/auth/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user || user.resetOtp !== otp || !user.resetOtpExpiry || user.resetOtpExpiry < new Date()) {
+      return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+    
+    res.json({ status: 'success' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters long." });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || user.resetOtp !== otp || !user.resetOtpExpiry || user.resetOtpExpiry < new Date()) {
+      return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { email },
+      data: { 
+        passwordHash,
+        resetOtp: null,
+        resetOtpExpiry: null
+      }
+    });
+
+    res.json({ status: 'success' });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

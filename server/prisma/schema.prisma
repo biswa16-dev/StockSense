@@ -16,6 +16,8 @@ model User {
   passwordHash  String    @map("password_hash")
   role          String    @default("STAFF")
   createdAt     DateTime  @default(now()) @map("created_at")
+  resetOtp      String?   @map("reset_otp")
+  resetOtpExpiry DateTime? @map("reset_otp_expiry")
   
   transactions  Transaction[]
   

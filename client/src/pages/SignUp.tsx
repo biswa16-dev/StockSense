@@ -12,6 +12,9 @@ export default function SignUp() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [forgotPasswordStage, setForgotPasswordStage] = useState(0);
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const navigate = useNavigate();
@@ -67,6 +70,52 @@ export default function SignUp() {
       setIsLoading(false);
       setErrorMsg("Network error connecting to server.");
     }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+    setIsLoading(true);
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+    try {
+      if (forgotPasswordStage === 1) {
+        if (!email) { setErrorMsg("Email required"); setIsLoading(false); return; }
+        const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        if (!res.ok) throw new Error("Failed to send OTP");
+        setSuccessMsg("OTP sent to your email!");
+        setForgotPasswordStage(2);
+      } else if (forgotPasswordStage === 2) {
+        if (!otp) { setErrorMsg("OTP required"); setIsLoading(false); return; }
+        const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Invalid OTP");
+        setSuccessMsg("OTP Verified! Enter new password.");
+        setForgotPasswordStage(3);
+      } else if (forgotPasswordStage === 3) {
+        if (newPassword.length < 8) { setErrorMsg("Password must be at least 8 characters long"); setIsLoading(false); return; }
+        const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, otp, newPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to reset");
+        setSuccessMsg("Password reset successfully! You can now log in.");
+        setForgotPasswordStage(0);
+        setIsLogin(true);
+        setPassword("");
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    }
+    setIsLoading(false);
   };
 
   const loginWithGoogle = useGoogleLogin({
@@ -180,12 +229,48 @@ export default function SignUp() {
         >
           {/* Header */}
           <div>
-            <h2 className="text-3xl font-medium tracking-tight text-[#1E325A]">{isLogin ? "Welcome Back" : "Create New Profile"}</h2>
-            <p className="text-[rgba(30,50,90,0.6)] text-sm mt-2">{isLogin ? "Enter your credentials to access your account." : "Input your basic details to begin the journey."}</p>
+            <h2 className="text-3xl font-medium tracking-tight text-[#1E325A]">
+              {forgotPasswordStage > 0 ? "Reset Password" : isLogin ? "Welcome Back" : "Create New Profile"}
+            </h2>
+            <p className="text-[rgba(30,50,90,0.6)] text-sm mt-2">
+              {forgotPasswordStage > 0 ? "Follow the steps to recover your account." : isLogin ? "Enter your credentials to access your account." : "Input your basic details to begin the journey."}
+            </p>
           </div>
 
           {/* Form Layout */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          {forgotPasswordStage > 0 ? (
+            <form className="space-y-6" onSubmit={handleForgotPassword}>
+              {errorMsg && <div className="p-3 bg-red-50 text-red-600 text-sm font-medium rounded-xl border border-red-100">{errorMsg}</div>}
+              {successMsg && <div className="p-3 bg-green-50 text-green-600 text-sm font-medium rounded-xl border border-green-100">{successMsg}</div>}
+
+              <InputGroup 
+                label="Email" 
+                placeholder="Enter your email" 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                disabled={forgotPasswordStage > 1}
+              />
+              
+              {forgotPasswordStage === 2 && (
+                <InputGroup label="Enter OTP" placeholder="6-digit OTP" type="text" value={otp} onChange={(e) => setOtp(e.target.value)} />
+              )}
+
+              {forgotPasswordStage === 3 && (
+                <InputGroup label="New Password" placeholder="••••••••" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+              )}
+
+              <button disabled={isLoading} type="submit" className="w-full flex items-center justify-center h-14 bg-[rgba(30,50,90,0.9)] text-white font-semibold rounded-xl hover:bg-[rgba(30,50,90,1)] active:scale-[0.98] mt-4 transition-all cursor-pointer shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
+                {isLoading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : (
+                  forgotPasswordStage === 1 ? "Send OTP" : forgotPasswordStage === 2 ? "Verify OTP" : "Reset Password"
+                )}
+              </button>
+              <div className="text-center mt-4">
+                <span onClick={() => { setForgotPasswordStage(0); setErrorMsg(""); setSuccessMsg(""); }} className="text-sm text-[rgba(30,50,90,1)] hover:underline font-medium cursor-pointer">Back to Login</span>
+              </div>
+            </form>
+          ) : (
+            <form className="space-y-6" onSubmit={handleSubmit}>
             {errorMsg && <div className="p-3 bg-red-50 text-red-600 text-sm font-medium rounded-xl border border-red-100">{errorMsg}</div>}
             {successMsg && <div className="p-3 bg-green-50 text-green-600 text-sm font-medium rounded-xl border border-green-100">{successMsg}</div>}
 
@@ -216,7 +301,10 @@ export default function SignUp() {
                   )}
                 </button>
               </div>
-              <p className="text-[10px] text-[rgba(30,50,90,0.5)] mt-1">Requires at least 8 symbols.</p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-[10px] text-[rgba(30,50,90,0.5)]">Requires at least 8 symbols.</p>
+                {isLogin && <span onClick={() => { setForgotPasswordStage(1); setErrorMsg(""); setSuccessMsg(""); }} className="text-xs text-[rgba(30,50,90,1)] hover:underline font-medium cursor-pointer">Forgot Password?</span>}
+              </div>
             </div>
 
             <button disabled={isLoading} type="submit" className="w-full flex items-center justify-center h-14 bg-[rgba(30,50,90,0.9)] text-white font-semibold rounded-xl hover:bg-[rgba(30,50,90,1)] active:scale-[0.98] mt-4 transition-all cursor-pointer shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
@@ -227,6 +315,7 @@ export default function SignUp() {
               )}
             </button>
           </form>
+          )}
 
           {/* Divider */}
           <div className="relative flex items-center py-2">
@@ -288,7 +377,7 @@ function StepItem({ number, text, active }: { number: number, text: string, acti
 
 // Removed unused SocialButton component
 
-function InputGroup({ label, placeholder, type, value, onChange }: { label: string, placeholder: string, type: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
+function InputGroup({ label, placeholder, type, value, onChange, disabled }: { label: string, placeholder: string, type: string, value?: string, onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void, disabled?: boolean }) {
   return (
     <div className="flex flex-col space-y-1.5">
       <label className="text-sm font-medium text-[rgba(30,50,90,0.8)]">{label}</label>
@@ -297,7 +386,8 @@ function InputGroup({ label, placeholder, type, value, onChange }: { label: stri
         placeholder={placeholder} 
         value={value}
         onChange={onChange}
-        className="bg-white/50 border border-white/40 shadow-sm rounded-xl h-11 px-4 text-[#1E325A] placeholder:text-[rgba(30,50,90,0.3)] focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] focus:outline-none transition-all" 
+        disabled={disabled}
+        className="bg-white/50 border border-white/40 shadow-sm rounded-xl h-11 px-4 text-[#1E325A] placeholder:text-[rgba(30,50,90,0.3)] focus:ring-2 focus:ring-[rgba(30,50,90,0.2)] focus:outline-none transition-all disabled:opacity-60 disabled:bg-gray-100" 
       />
     </div>
   );
