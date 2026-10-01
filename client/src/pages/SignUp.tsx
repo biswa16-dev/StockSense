@@ -16,19 +16,36 @@ export default function SignUp() {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [timer, setTimer] = useState(0);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
-    if (forgotPasswordStage === 2 && timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
+    if (forgotPasswordStage === 2 && expiresAt) {
+      // Calculate immediately
+      const calculateTime = () => {
+        const remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+        setTimer(remaining);
+        if (remaining === 0) setExpiresAt(null);
+      };
+      
+      calculateTime();
+      interval = setInterval(calculateTime, 1000);
+      
+      // Also calculate when the tab becomes visible again
+      const handleVisibilityChange = () => {
+        if (!document.hidden) calculateTime();
+      };
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+      
+      return () => {
+        clearInterval(interval);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+      };
     }
-    return () => clearInterval(interval);
-  }, [forgotPasswordStage, timer]);
+  }, [forgotPasswordStage, expiresAt]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -106,7 +123,7 @@ export default function SignUp() {
         if (!res.ok) throw new Error("Failed to send OTP");
         setSuccessMsg("OTP sent to your email!");
         setForgotPasswordStage(2);
-        setTimer(300);
+        setExpiresAt(Date.now() + 300 * 1000); // 5 minutes
       } else if (forgotPasswordStage === 2) {
         if (!otp) { setErrorMsg("OTP required"); setIsLoading(false); return; }
         const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
@@ -148,7 +165,7 @@ export default function SignUp() {
       });
       if (!res.ok) throw new Error("Failed to resend OTP");
       setSuccessMsg("A new OTP has been sent to your email!");
-      setTimer(300);
+      setExpiresAt(Date.now() + 300 * 1000); // 5 minutes
     } catch (err: any) {
       setErrorMsg(err.message);
     }
