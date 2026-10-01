@@ -155,7 +155,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
 
     await prisma.user.update({
       where: { email },
@@ -174,8 +174,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       from: `"StockSense Support" <${process.env.SMTP_EMAIL}>`,
       to: email,
       subject: "Password Reset OTP",
-      text: `Your OTP for resetting your StockSense password is: ${otp}\n\nIt is valid for 10 minutes.`,
-      html: `<h3>StockSense Password Reset</h3><p>Your OTP is: <strong>${otp}</strong></p><p>It is valid for 10 minutes.</p>`
+      text: `Your OTP for resetting your StockSense password is: ${otp}\n\nIt is valid for 5 minutes.`,
+      html: `<h3>StockSense Password Reset</h3><p>Your OTP is: <strong>${otp}</strong></p><p>It is valid for 5 minutes.</p>`
     });
 
     res.json({ status: 'success' });

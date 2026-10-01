@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Package, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
@@ -15,9 +15,26 @@ export default function SignUp() {
   const [forgotPasswordStage, setForgotPasswordStage] = useState(0);
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [timer, setTimer] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (forgotPasswordStage === 2 && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [forgotPasswordStage, timer]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +106,7 @@ export default function SignUp() {
         if (!res.ok) throw new Error("Failed to send OTP");
         setSuccessMsg("OTP sent to your email!");
         setForgotPasswordStage(2);
+        setTimer(300);
       } else if (forgotPasswordStage === 2) {
         if (!otp) { setErrorMsg("OTP required"); setIsLoading(false); return; }
         const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
@@ -112,6 +130,25 @@ export default function SignUp() {
         setIsLogin(true);
         setPassword("");
       }
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    }
+    setIsLoading(false);
+  };
+
+  const handleResendOTP = async () => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    setIsLoading(true);
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    try {
+      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (!res.ok) throw new Error("Failed to resend OTP");
+      setSuccessMsg("A new OTP has been sent to your email!");
+      setTimer(300);
     } catch (err: any) {
       setErrorMsg(err.message);
     }
@@ -253,7 +290,24 @@ export default function SignUp() {
               />
               
               {forgotPasswordStage === 2 && (
-                <InputGroup label="Enter OTP" placeholder="6-digit OTP" type="text" value={otp} onChange={(e) => setOtp(e.target.value)} />
+                <div className="space-y-2">
+                  <InputGroup label="Enter OTP" placeholder="6-digit OTP" type="text" value={otp} onChange={(e) => setOtp(e.target.value)} />
+                  <div className="flex justify-between items-center text-sm px-1">
+                    {timer > 0 ? (
+                      <span className="text-[rgba(30,50,90,0.6)]">Expires in: <span className="font-semibold text-red-500">{formatTime(timer)}</span></span>
+                    ) : (
+                      <span className="text-red-500 font-medium">OTP Expired</span>
+                    )}
+                    <button 
+                      type="button"
+                      disabled={timer > 0 || isLoading}
+                      onClick={handleResendOTP}
+                      className="text-[rgba(30,50,90,1)] hover:underline font-medium disabled:opacity-40 disabled:no-underline cursor-pointer"
+                    >
+                      Resend OTP
+                    </button>
+                  </div>
+                </div>
               )}
 
               {forgotPasswordStage === 3 && (
